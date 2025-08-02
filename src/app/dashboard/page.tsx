@@ -1,7 +1,77 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { Users, UserCheck, DollarSign, Calendar, Bell } from 'lucide-react'
 
+interface DashboardStats {
+  activeMembers: number
+  trainers: number
+  cashBalance: number
+  visitsToday: number
+  incomeToday: number
+  expensesToday: number
+  newMembersToday: number
+  hoursWorkedToday: number
+}
+
 export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>({
+    activeMembers: 0,
+    trainers: 0,
+    cashBalance: 0,
+    visitsToday: 0,
+    incomeToday: 0,
+    expensesToday: 0,
+    newMembersToday: 0,
+    hoursWorkedToday: 0
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [membersRes, trainersRes, balanceRes, visitsRes] = await Promise.all([
+          fetch('/api/members'),
+          fetch('/api/trainers'),
+          fetch('/api/cash-transactions/balance'),
+          fetch('/api/member-visits')
+        ])
+
+        const [members, trainers, balance, visits] = await Promise.all([
+          membersRes.json(),
+          trainersRes.json(),
+          balanceRes.json(),
+          visitsRes.json()
+        ])
+
+        const today = new Date().toISOString().split('T')[0]
+        const visitsToday = visits.filter((visit: any) => 
+          visit.visitDate.startsWith(today)
+        ).length
+
+        const activeMembersCount = members.filter((member: any) => member.active).length
+        const activeTrainersCount = trainers.filter((trainer: any) => trainer.active).length
+
+        setStats({
+          activeMembers: activeMembersCount,
+          trainers: activeTrainersCount,
+          cashBalance: balance.balance || 0,
+          visitsToday,
+          incomeToday: 0, // Will be calculated from today's transactions
+          expensesToday: 0, // Will be calculated from today's transactions
+          newMembersToday: 0, // Will be calculated from today's new members
+          hoursWorkedToday: 0 // Will be calculated from today's sessions
+        })
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
   return (
     <Layout title="Dashboard">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -9,7 +79,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Miembros Activos</p>
-              <p className="text-2xl font-bold text-gray-900">248</p>
+              <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.activeMembers}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
               <Users className="w-6 h-6 text-blue-600" />
@@ -21,7 +91,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Entrenadores</p>
-              <p className="text-2xl font-bold text-gray-900">8</p>
+              <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.trainers}</p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
               <UserCheck className="w-6 h-6 text-green-600" />
@@ -33,7 +103,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Saldo Caja</p>
-              <p className="text-2xl font-bold text-gray-900">$350,000</p>
+              <p className="text-2xl font-bold text-gray-900">{loading ? '...' : `$${stats.cashBalance.toLocaleString()}`}</p>
             </div>
             <div className="p-3 bg-yellow-100 rounded-full">
               <DollarSign className="w-6 h-6 text-yellow-600" />
@@ -45,7 +115,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Visitas Hoy</p>
-              <p className="text-2xl font-bold text-gray-900">42</p>
+              <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.visitsToday}</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
               <Calendar className="w-6 h-6 text-purple-600" />
@@ -63,35 +133,13 @@ export default function DashboardPage() {
             </h3>
           </div>
           <div className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    Membresía de Juan Pérez vence en 2 días
-                  </p>
-                  <p className="text-xs text-gray-500">Hace 5 minutos</p>
-                </div>
+            {loading ? (
+              <div className="text-center py-4 text-gray-500">Cargando notificaciones...</div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                No hay notificaciones nuevas
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    María González tiene 1 clase restante
-                  </p>
-                  <p className="text-xs text-gray-500">Hace 1 hora</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    Nuevo miembro registrado: Carlos Ruiz
-                  </p>
-                  <p className="text-xs text-gray-500">Hace 2 horas</p>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -105,19 +153,27 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Ingresos hoy</span>
-                <span className="font-semibold text-green-600">+$125,000</span>
+                <span className="font-semibold text-green-600">
+                  {loading ? '...' : `+$${stats.incomeToday.toLocaleString()}`}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Gastos hoy</span>
-                <span className="font-semibold text-red-600">-$45,000</span>
+                <span className="font-semibold text-red-600">
+                  {loading ? '...' : `-$${stats.expensesToday.toLocaleString()}`}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Nuevos miembros</span>
-                <span className="font-semibold text-blue-600">+3</span>
+                <span className="font-semibold text-blue-600">
+                  {loading ? '...' : `+${stats.newMembersToday}`}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Horas trabajadas</span>
-                <span className="font-semibold text-purple-600">16h</span>
+                <span className="font-semibold text-purple-600">
+                  {loading ? '...' : `${stats.hoursWorkedToday}h`}
+                </span>
               </div>
             </div>
           </div>
