@@ -85,7 +85,7 @@ export default function PinLogin() {
               key={digit}
               onClick={() => handlePinInput(digit)}
               disabled={loading}
-              className="h-16 text-xl font-semibold bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+              className="h-16 text-xl font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl transition-colors disabled:opacity-50"
             >
               {digit}
             </button>
@@ -93,7 +93,7 @@ export default function PinLogin() {
           <button
             onClick={handleBackspace}
             disabled={loading || pin.length === 0}
-            className="h-16 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center"
+            className="h-16 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center"
           >
             ⌫
           </button>
