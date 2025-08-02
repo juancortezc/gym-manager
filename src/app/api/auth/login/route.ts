@@ -34,15 +34,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const cookieStore = await cookies()
-    cookieStore.set('gym-auth', 'authenticated', {
+    const response = NextResponse.json({ success: true })
+    response.cookies.set('gym-auth', 'authenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
     })
 
-    return NextResponse.json({ success: true })
+    return response
   } catch (error) {
     console.error('Auth error:', error)
     return NextResponse.json(
