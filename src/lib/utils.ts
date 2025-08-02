@@ -13,26 +13,30 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-export function formatDate(date: Date): string {
+export function formatDate(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
   return new Intl.DateFormat('es-CO', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(date)
+  }).format(dateObj)
 }
 
-export function formatDateTime(date: Date): string {
+export function formatDateTime(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
   return new Intl.DateFormat('es-CO', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(date)
+  }).format(dateObj)
 }
 
-export function calculateHours(startTime: Date, endTime: Date): number {
-  const diffMs = endTime.getTime() - startTime.getTime()
+export function calculateHours(startTime: Date | string, endTime: Date | string): number {
+  const startObj = typeof startTime === 'string' ? new Date(startTime) : startTime
+  const endObj = typeof endTime === 'string' ? new Date(endTime) : endTime
+  const diffMs = endObj.getTime() - startObj.getTime()
   return Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100
 }
 
