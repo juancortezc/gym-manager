@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  pin       String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Trainer {
+  id          String   @id @default(cuid())
+  name        String
+  hourlyRate  Float
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  workSessions TrainerSession[]
+
+  @@map("trainers")
+}
+
+model TrainerSession {
+  id        String   @id @default(cuid())
+  trainerId String
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime?
+  totalHours Float?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trainer Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@map("trainer_sessions")
+}
+
+model CleaningStaff {
+  id          String   @id @default(cuid())
+  name        String
+  hourlyRate  Float
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  workSessions CleaningSession[]
+
+  @@map("cleaning_staff")
+}
+
+model CleaningSession {
+  id        String   @id @default(cuid())
+  staffId   String
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime?
+  totalHours Float?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff CleaningStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@map("cleaning_sessions")
+}
+
+model Plan {
+  id                  String   @id @default(cuid())
+  name                String
+  durationInDays      Int
+  classesPerWeek      Int
+  totalClasses        Int
+  price               Float
+  active              Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  memberships Membership[]
+
+  @@map("plans")
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  membershipNumber String @unique
+  firstName String
+  lastName  String
+  gender    String
+  phone     String?
+  email     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships Membership[]
+  visits      MemberVisit[]
+
+  @@map("members")
+}
+
+model Membership {
+  id            String   @id @default(cuid())
+  memberId      String
+  planId        String
+  startDate     DateTime
+  endDate       DateTime
+  classesUsed   Int      @default(0)
+  paymentMethod String
+  totalPaid     Float
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  @@map("memberships")
+}
+
+model MemberVisit {
+  id        String   @id @default(cuid())
+  memberId  String
+  visitDate DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("member_visits")
+}
+
+model CashTransaction {
+  id            String   @id @default(cuid())
+  type          String   // "INCOME" o "EXPENSE"
+  amount        Float
+  description   String
+  document      String?
+  responsible   String
+  date          DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("cash_transactions")
+}
