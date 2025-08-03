@@ -17,13 +17,15 @@ import {
   ChevronRight
 } from 'lucide-react'
 import InstallPrompt from './InstallPrompt'
+import FloatingActionButton from './FloatingActionButton'
 
 interface LayoutProps {
   children: React.ReactNode
   title: string
+  onQuickAction?: (action: string) => void
 }
 
-export default function Layout({ children, title }: LayoutProps) {
+export default function Layout({ children, title, onQuickAction }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
@@ -47,58 +49,58 @@ export default function Layout({ children, title }: LayoutProps) {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-[var(--background)]">
       {/* Desktop Sidebar */}
       <div className={`hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:z-50 ${
-        sidebarCollapsed ? 'lg:w-20' : 'lg:w-72'
-      } transition-all duration-300 ease-in-out`}>
-        <div className="flex flex-col flex-grow bg-white/80 backdrop-blur-xl shadow-xl border-r border-white/20">
+        sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'
+      } transition-all duration-200 ease-out`}>
+        <div className="flex flex-col flex-grow bg-white shadow-sm border-r border-gray-100">
           {/* Logo/Header */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200/50">
+          <div className="flex items-center justify-between h-14 px-3 border-b border-gray-50">
             {!sidebarCollapsed && (
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">GM</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-7 h-7 luxury-gradient rounded-lg flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">GM</span>
                 </div>
-                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-base font-semibold luxury-text-gradient">
                   Gym Manager
                 </h1>
               </div>
             )}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-1.5 rounded-md hover:bg-gray-50 transition-colors text-gray-400 hover:text-gray-600"
             >
-              {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+              {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
           </div>
           
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-6 space-y-1">
+          <nav className="flex-1 px-2 py-4 space-y-0.5">
             {menuItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'px-4'} py-3 rounded-xl hover:bg-white/60 transition-all duration-200 group`}
+                className={`flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'px-3'} py-2.5 rounded-lg hover:bg-gray-50 transition-all duration-150 group text-gray-700 hover:text-gray-900`}
                 title={sidebarCollapsed ? item.label : undefined}
               >
-                <item.icon size={20} className={`${item.color} group-hover:scale-110 transition-transform`} />
+                <item.icon size={18} className={`${item.color} transition-colors`} />
                 {!sidebarCollapsed && (
-                  <span className="ml-3 text-gray-700 font-medium">{item.label}</span>
+                  <span className="ml-2.5 text-sm font-medium">{item.label}</span>
                 )}
               </Link>
             ))}
           </nav>
 
           {/* Logout */}
-          <div className="p-3 border-t border-gray-200/50">
+          <div className="p-2 border-t border-gray-50">
             <button
               onClick={handleLogout}
-              className={`flex items-center w-full ${sidebarCollapsed ? 'justify-center px-3' : 'px-4'} py-3 text-red-600 rounded-xl hover:bg-red-50 transition-all duration-200 group`}
+              className={`flex items-center w-full ${sidebarCollapsed ? 'justify-center px-2' : 'px-3'} py-2.5 text-red-500 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all duration-150 group`}
               title={sidebarCollapsed ? 'Cerrar Sesión' : undefined}
             >
-              <LogOut size={20} className="group-hover:scale-110 transition-transform" />
-              {!sidebarCollapsed && <span className="ml-3 font-medium">Cerrar Sesión</span>}
+              <LogOut size={18} className="transition-colors" />
+              {!sidebarCollapsed && <span className="ml-2.5 text-sm font-medium">Cerrar Sesión</span>}
             </button>
           </div>
         </div>
@@ -106,65 +108,64 @@ export default function Layout({ children, title }: LayoutProps) {
 
       {/* Mobile Sidebar */}
       <div className={`lg:hidden fixed inset-0 z-50 ${mobileMenuOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-        <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-xl">
-          <div className="flex items-center justify-between h-16 px-4 border-b">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm font-bold">GM</span>
+        <div className="fixed inset-0 bg-black/40" onClick={() => setMobileMenuOpen(false)} />
+        <div className="fixed left-0 top-0 h-full w-72 bg-white shadow-xl">
+          <div className="flex items-center justify-between h-14 px-4 border-b border-gray-50">
+            <div className="flex items-center space-x-2">
+              <div className="w-7 h-7 luxury-gradient rounded-lg flex items-center justify-center">
+                <span className="text-white text-xs font-bold">GM</span>
               </div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-base font-semibold luxury-text-gradient">
                 Gym Manager
               </h1>
             </div>
-            <button onClick={() => setMobileMenuOpen(false)}>
-              <X size={20} />
+            <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 rounded-md hover:bg-gray-50 transition-colors text-gray-400 hover:text-gray-600">
+              <X size={18} />
             </button>
           </div>
-          <nav className="px-3 py-6 space-y-1">
+          <nav className="px-3 py-4 space-y-0.5">
             {menuItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-gray-700 hover:text-gray-900"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <item.icon size={20} className={item.color} />
-                <span className="ml-3 text-gray-700 font-medium">{item.label}</span>
+                <item.icon size={18} className={item.color} />
+                <span className="ml-2.5 text-sm font-medium">{item.label}</span>
               </Link>
             ))}
           </nav>
-          <div className="absolute bottom-0 left-0 right-0 p-3 border-t">
+          <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-50">
             <button
               onClick={handleLogout}
-              className="flex items-center w-full px-4 py-3 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+              className="flex items-center w-full px-3 py-2.5 text-red-500 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
             >
-              <LogOut size={20} />
-              <span className="ml-3 font-medium">Cerrar Sesión</span>
+              <LogOut size={18} />
+              <span className="ml-2.5 text-sm font-medium">Cerrar Sesión</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className={`lg:transition-all lg:duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
+      <div className={`lg:transition-all lg:duration-200 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
         {/* Top Header */}
-        <header className="bg-white/80 backdrop-blur-xl shadow-sm border-b border-white/20 h-16 flex items-center justify-between px-4 lg:px-6">
+        <header className="bg-white shadow-sm border-b border-gray-50 h-12 flex items-center justify-between px-4 lg:px-5">
           <div className="flex items-center">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 mr-3"
+              className="lg:hidden p-1.5 rounded-md hover:bg-gray-50 mr-2 text-gray-400 hover:text-gray-600"
             >
-              <Menu size={20} />
+              <Menu size={18} />
             </button>
-            <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+            <h2 className="text-lg font-semibold text-[var(--luxury-charcoal)]">{title}</h2>
           </div>
           <div className="flex items-center space-x-3">
-            <div className="hidden sm:block text-sm text-gray-500">
+            <div className="hidden sm:block text-xs text-gray-500 font-medium">
               {new Date().toLocaleDateString('es-ES', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
+                weekday: 'short', 
+                month: 'short', 
                 day: 'numeric' 
               })}
             </div>
@@ -172,10 +173,13 @@ export default function Layout({ children, title }: LayoutProps) {
         </header>
 
         {/* Content */}
-        <main className="p-4 lg:p-6">
+        <main className="p-3 lg:p-4">
           {children}
         </main>
       </div>
+
+      {/* Floating Action Button */}
+      {onQuickAction && <FloatingActionButton onAction={onQuickAction} />}
 
       <InstallPrompt />
     </div>

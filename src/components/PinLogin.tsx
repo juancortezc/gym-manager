@@ -49,23 +49,26 @@ export default function PinLogin() {
   const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            🏋️‍♂️ Gym Manager
+    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm border border-gray-100">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 luxury-gradient rounded-xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-xl font-bold">GM</span>
+          </div>
+          <h1 className="text-2xl font-semibold luxury-text-gradient mb-1">
+            Gym Manager
           </h1>
-          <p className="text-gray-600">Ingresa tu PIN para continuar</p>
+          <p className="text-sm text-gray-500">Ingresa tu PIN para acceder</p>
         </div>
 
         <div className="flex justify-center mb-6">
-          <div className="flex space-x-3">
+          <div className="flex space-x-2">
             {[0, 1, 2, 3].map((index) => (
               <div
                 key={index}
-                className={`w-4 h-4 rounded-full border-2 ${
+                className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-200 ${
                   pin.length > index
-                    ? 'bg-blue-600 border-blue-600'
+                    ? 'luxury-gradient border-[var(--luxury-gold)]'
                     : 'border-gray-300'
                 }`}
               />
@@ -74,18 +77,18 @@ export default function PinLogin() {
         </div>
 
         {error && (
-          <div className="text-red-500 text-center mb-4 text-sm">
-            {error}
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-center text-sm font-medium">{error}</p>
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-5">
           {digits.map((digit) => (
             <button
               key={digit}
               onClick={() => handlePinInput(digit)}
               disabled={loading}
-              className="h-16 text-xl font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl transition-colors disabled:opacity-50"
+              className="h-12 text-lg font-medium bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900 rounded-lg transition-all duration-150 disabled:opacity-50 border border-gray-200 hover:border-gray-300"
             >
               {digit}
             </button>
@@ -93,14 +96,14 @@ export default function PinLogin() {
           <button
             onClick={handleBackspace}
             disabled={loading || pin.length === 0}
-            className="h-16 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center"
+            className="h-12 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition-all duration-150 disabled:opacity-50 flex items-center justify-center border border-red-200 hover:border-red-300"
           >
             ⌫
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading || pin.length !== 4}
-            className="h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center"
+            className="h-12 luxury-gradient hover:opacity-90 text-white rounded-lg transition-all duration-150 disabled:opacity-50 flex items-center justify-center text-sm font-medium"
           >
             {loading ? '...' : '✓'}
           </button>

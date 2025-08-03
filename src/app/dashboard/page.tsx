@@ -39,20 +39,20 @@ function QuickActionModal({ isOpen, onClose, title, children }: QuickActionModal
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-3 max-h-[90vh] overflow-auto">
+        <div className="sticky top-0 bg-white border-b border-gray-50 px-4 py-3 rounded-t-xl">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+            <h3 className="text-base font-semibold text-[var(--luxury-charcoal)]">{title}</h3>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              className="w-7 h-7 rounded-md bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-400 hover:text-gray-600"
             >
               ×
             </button>
           </div>
         </div>
-        <div className="p-6">
+        <div className="p-4">
           {children}
         </div>
       </div>
@@ -95,41 +95,41 @@ function VisitForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-600 mb-1.5">
           Número de Membresía
         </label>
         <input
           type="text"
           value={membershipNumber}
           onChange={(e) => setMembershipNumber(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
           placeholder="Ej: GM001"
           required
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-600 mb-1.5">
           Notas (opcional)
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+          rows={2}
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
           placeholder="Comentarios adicionales..."
         />
       </div>
       {message && (
-        <div className="p-3 rounded-lg bg-gray-50 text-sm text-gray-700">
+        <div className="p-2.5 rounded-lg bg-gray-50 text-xs text-gray-700">
           {message}
         </div>
       )}
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 transition-all"
+        className="w-full luxury-gradient text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
       >
         {loading ? 'Registrando...' : 'Registrar Visita'}
       </button>
@@ -201,20 +201,20 @@ function TrainerSessionForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-600 mb-1.5">
           Entrenador
         </label>
         {loadingTrainers ? (
-          <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500">
+          <div className="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 text-sm">
             Cargando entrenadores...
           </div>
         ) : (
           <select
             value={trainerId}
             onChange={(e) => setTrainerId(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-gray-900 text-sm"
             required
           >
             <option value="">Seleccionar entrenador</option>
@@ -226,53 +226,53 @@ function TrainerSessionForm({ onSuccess }: { onSuccess: () => void }) {
           </select>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">
             Hora Inicio
           </label>
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-gray-900 text-sm"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">
             Hora Fin (opcional)
           </label>
           <input
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-gray-900 text-sm"
             min={startTime}
           />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-600 mb-1.5">
           Notas (opcional)
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+          rows={2}
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-gray-900 text-sm"
           placeholder="Actividades realizadas, observaciones..."
         />
       </div>
       {message && (
-        <div className="p-3 rounded-lg bg-gray-50 text-sm text-gray-700">
+        <div className="p-2.5 rounded-lg bg-gray-50 text-xs text-gray-700">
           {message}
         </div>
       )}
       <button
         type="submit"
         disabled={loading || loadingTrainers}
-        className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4 rounded-xl font-medium hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 transition-all"
+        className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 transition-all"
       >
         {loading ? 'Registrando...' : 'Registrar Sesión'}
       </button>
@@ -323,16 +323,16 @@ function CashForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-600 mb-1.5">
           Tipo de Transacción
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setType('INCOME')}
-            className={`p-3 rounded-xl border-2 transition-all ${
+            className={`p-2.5 rounded-lg border-2 transition-all text-sm ${
               type === 'INCOME'
                 ? 'border-green-500 bg-green-50 text-green-700'
                 : 'border-gray-200 text-gray-600 hover:border-gray-300'
@@ -343,7 +343,7 @@ function CashForm({ onSuccess }: { onSuccess: () => void }) {
           <button
             type="button"
             onClick={() => setType('EXPENSE')}
-            className={`p-3 rounded-xl border-2 transition-all ${
+            className={`p-2.5 rounded-lg border-2 transition-all text-sm ${
               type === 'EXPENSE'
                 ? 'border-red-500 bg-red-50 text-red-700'
                 : 'border-gray-200 text-gray-600 hover:border-gray-300'
@@ -354,7 +354,7 @@ function CashForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-600 mb-1.5">
           Monto
         </label>
         <input
@@ -362,46 +362,46 @@ function CashForm({ onSuccess }: { onSuccess: () => void }) {
           step="0.01"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
           placeholder="0.00"
           required
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-600 mb-1.5">
           Descripción
         </label>
         <input
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
           placeholder="Descripción de la transacción"
           required
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-600 mb-1.5">
           Responsable
         </label>
         <input
           type="text"
           value={responsible}
           onChange={(e) => setResponsible(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
           placeholder="Nombre del responsable"
           required
         />
       </div>
       {message && (
-        <div className="p-3 rounded-lg bg-gray-50 text-sm text-gray-700">
+        <div className="p-2.5 rounded-lg bg-gray-50 text-xs text-gray-700">
           {message}
         </div>
       )}
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-4 rounded-xl font-medium hover:from-green-700 hover:to-green-800 disabled:opacity-50 transition-all"
+        className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:from-green-700 hover:to-green-800 disabled:opacity-50 transition-all"
       >
         {loading ? 'Registrando...' : 'Registrar Transacción'}
       </button>
@@ -544,22 +544,22 @@ export default function DashboardPage() {
   ]
 
   return (
-    <Layout title="Panel de Control">
-      <div className="space-y-8">
+    <Layout title="Panel de Control" onQuickAction={setActiveModal}>
+      <div className="space-y-5">
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {kpiCards.map((card, index) => (
             <div
               key={index}
-              className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
+              className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-xl ${card.bgColor}`}>
-                  <card.icon className={`w-6 h-6 ${card.textColor}`} />
+              <div className="flex items-center justify-between">
+                <div className={`p-2.5 rounded-lg ${card.bgColor}`}>
+                  <card.icon className={`w-5 h-5 ${card.textColor}`} />
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-500 font-medium">{card.title}</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xs text-gray-500 font-medium mb-0.5">{card.title}</p>
+                  <p className="text-xl font-bold text-[var(--luxury-charcoal)]">
                     {loading ? '...' : card.value}
                   </p>
                 </div>
@@ -569,26 +569,26 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Acciones Rápidas</h2>
-            <p className="text-gray-600">Operaciones frecuentes del gimnasio</p>
+        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-[var(--luxury-charcoal)] mb-1">Acciones Rápidas</h2>
+            <p className="text-sm text-gray-500">Operaciones frecuentes del gimnasio</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {quickActions.map((action) => (
               <button
                 key={action.id}
                 onClick={() => setActiveModal(action.id)}
-                className={`p-6 rounded-2xl bg-gradient-to-br ${action.color} ${action.hoverColor} text-white transition-all duration-300 hover:scale-105 hover:shadow-lg group`}
+                className={`p-4 rounded-lg bg-gradient-to-br ${action.color} ${action.hoverColor} text-white transition-all duration-200 hover:shadow-md group`}
               >
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="p-3 bg-white/20 rounded-xl group-hover:bg-white/30 transition-colors">
-                    <action.icon className="w-6 h-6" />
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <div className="p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">
+                    <action.icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">{action.title}</h3>
-                    <p className="text-sm opacity-90">{action.description}</p>
+                    <h3 className="font-medium text-sm">{action.title}</h3>
+                    <p className="text-xs opacity-90">{action.description}</p>
                   </div>
                 </div>
               </button>
@@ -597,16 +597,16 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Actividad Reciente</h2>
-            <p className="text-gray-600">Últimas operaciones del sistema</p>
+        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-[var(--luxury-charcoal)] mb-1">Actividad Reciente</h2>
+            <p className="text-sm text-gray-500">Últimas operaciones del sistema</p>
           </div>
           
-          <div className="text-center py-12 text-gray-500">
-            <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium">No hay actividad reciente</p>
-            <p className="text-sm">Las operaciones aparecerán aquí una vez que comiences a usar el sistema</p>
+          <div className="text-center py-8 text-gray-400">
+            <Activity className="w-10 h-10 mx-auto mb-3 opacity-50" />
+            <p className="text-sm font-medium mb-1">No hay actividad reciente</p>
+            <p className="text-xs">Las operaciones aparecerán aquí una vez que comiences a usar el sistema</p>
           </div>
         </div>
       </div>
