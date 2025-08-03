@@ -2,7 +2,7 @@
   "name": "Gym Manager - Sistema de Gestión de Gimnasio",
   "short_name": "Gym Manager",
   "description": "Sistema completo para la gestión de gimnasios con control de miembros, entrenadores y finanzas",
-  "start_url": "/",
+  "start_url": "/login",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
