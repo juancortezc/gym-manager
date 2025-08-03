@@ -44,11 +44,29 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { memberId, visitDate, notes } = await request.json()
+    const { memberId, membershipNumber, visitDate, notes } = await request.json()
 
-    if (!memberId) {
+    let finalMemberId = memberId
+
+    // If membershipNumber is provided instead of memberId, find the member
+    if (!memberId && membershipNumber) {
+      const member = await prisma.member.findUnique({
+        where: { membershipNumber },
+      })
+      
+      if (!member) {
+        return NextResponse.json(
+          { error: 'Miembro no encontrado con ese número de membresía' },
+          { status: 404 }
+        )
+      }
+      
+      finalMemberId = member.id
+    }
+
+    if (!finalMemberId) {
       return NextResponse.json(
-        { error: 'ID del miembro es requerido' },
+        { error: 'ID del miembro o número de membresía es requerido' },
         { status: 400 }
       )
     }
@@ -56,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Check if member has active membership
     const activeMembership = await prisma.membership.findFirst({
       where: {
-        memberId,
+        memberId: finalMemberId,
         active: true,
         endDate: {
           gte: new Date(),
@@ -85,7 +103,7 @@ export async function POST(request: NextRequest) {
     // Create visit
     const visit = await prisma.memberVisit.create({
       data: {
-        memberId,
+        memberId: finalMemberId,
         visitDate: visitDate ? new Date(visitDate) : new Date(),
         notes: notes?.trim() || null,
       },
