@@ -13,9 +13,9 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-export function formatDate(date: Date | string | null | undefined): string {
-  if (!date) return 'N/A'
+export function formatDate(date: Date | string): string {
   try {
+    if (!date) return 'N/A'
     const dateObj = typeof date === 'string' ? new Date(date) : date
     if (isNaN(dateObj.getTime())) return 'N/A'
     return new Intl.DateFormat('es-CO', {
@@ -28,9 +28,9 @@ export function formatDate(date: Date | string | null | undefined): string {
   }
 }
 
-export function formatDateTime(date: Date | string | null | undefined): string {
-  if (!date) return 'N/A'
+export function formatDateTime(date: Date | string): string {
   try {
+    if (!date) return 'N/A'
     const dateObj = typeof date === 'string' ? new Date(date) : date
     if (isNaN(dateObj.getTime())) return 'N/A'
     return new Intl.DateFormat('es-CO', {
@@ -45,9 +45,9 @@ export function formatDateTime(date: Date | string | null | undefined): string {
   }
 }
 
-export function calculateHours(startTime: Date | string | null | undefined, endTime: Date | string | null | undefined): number {
-  if (!startTime || !endTime) return 0
+export function calculateHours(startTime: Date | string, endTime: Date | string): number {
   try {
+    if (!startTime || !endTime) return 0
     const startObj = typeof startTime === 'string' ? new Date(startTime) : startTime
     const endObj = typeof endTime === 'string' ? new Date(endTime) : endTime
     if (isNaN(startObj.getTime()) || isNaN(endObj.getTime())) return 0

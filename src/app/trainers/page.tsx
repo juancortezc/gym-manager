@@ -233,7 +233,7 @@ export default function TrainersPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar size={16} />
-                      Desde {formatDate(trainer.createdAt)}
+                      Desde {trainer.createdAt ? formatDate(trainer.createdAt) : 'N/A'}
                     </div>
                   </div>
                 </div>
@@ -274,7 +274,7 @@ export default function TrainersPage() {
                       </div>
                       <div className="text-sm text-gray-600">
                         <p>Inicio: {new Date(session.startTime).toLocaleTimeString()}</p>
-                        <p>Fecha: {formatDate(session.date)}</p>
+                        <p>Fecha: {session.date ? formatDate(session.date) : 'N/A'}</p>
                       </div>
                     </div>
                   ))}
@@ -314,7 +314,7 @@ export default function TrainersPage() {
                             {session.trainer.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatDate(session.date)}
+                            {session.date ? formatDate(session.date) : 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {new Date(session.startTime).toLocaleTimeString()} - 
