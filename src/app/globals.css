@@ -2,13 +2,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --background: #fafbfc;
-  --foreground: #1a1d29;
-  --luxury-gold: #d4af37;
-  --luxury-platinum: #8c9ba5;
-  --luxury-charcoal: #2c3e50;
-  --luxury-pearl: #f8f9fa;
-  --luxury-shadow: rgba(0, 0, 0, 0.05);
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --fitness-blue: #2563eb;
+  --fitness-green: #10b981;
+  --fitness-orange: #f59e0b;
+  --fitness-red: #ef4444;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 @theme inline {
@@ -16,14 +28,6 @@
   --color-foreground: var(--foreground);
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1a1d29;
-    --foreground: #f8f9fa;
-    --luxury-pearl: #2c3e50;
-  }
 }
 
 * {
@@ -37,15 +41,80 @@ body {
   font-feature-settings: "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
 }
 
-.luxury-gradient {
-  background: linear-gradient(135deg, var(--luxury-gold) 0%, var(--luxury-platinum) 100%);
+/* Fitness Theme Colors */
+.fitness-blue {
+  background-color: var(--fitness-blue);
 }
 
-.luxury-text-gradient {
-  background: linear-gradient(135deg, var(--luxury-gold) 0%, var(--luxury-platinum) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.fitness-green {
+  background-color: var(--fitness-green);
+}
+
+.fitness-orange {
+  background-color: var(--fitness-orange);
+}
+
+.fitness-red {
+  background-color: var(--fitness-red);
+}
+
+.text-fitness-blue {
+  color: var(--fitness-blue);
+}
+
+.text-fitness-green {
+  color: var(--fitness-green);
+}
+
+.text-fitness-orange {
+  color: var(--fitness-orange);
+}
+
+.text-fitness-red {
+  color: var(--fitness-red);
+}
+
+/* Mobile-first responsive container */
+.mobile-container {
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: white;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .mobile-container {
+    box-shadow: var(--shadow-lg);
+    border-radius: 0;
+    min-height: calc(100vh - 2rem);
+    margin: 1rem auto;
+  }
+}
+
+/* Bottom navigation safe area */
+.bottom-nav-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 4rem);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
 }

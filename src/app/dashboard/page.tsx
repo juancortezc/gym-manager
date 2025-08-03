@@ -1,64 +1,25 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Layout from '@/components/Layout'
+import { useState, useEffect } from 'react'
+import MobileLayout from '@/components/MobileLayout'
+import ActionCard from '@/components/ActionCard'
+import QuickActions from '@/components/QuickActions'
+import MobileModal from '@/components/MobileModal'
 import { 
-  Users, 
-  UserCheck, 
-  DollarSign, 
-  Calendar, 
-  TrendingUp,
-  TrendingDown,
-  Plus,
+  UserPlus,
   Clock,
   CreditCard,
-  UserPlus,
-  Activity
+  Brush,
+  FileText,
+  Users,
+  BarChart3,
+  Settings
 } from 'lucide-react'
 
-interface DashboardStats {
-  activeMembers: number
-  trainers: number
-  cashBalance: number
-  visitsToday: number
-  incomeToday: number
-  expensesToday: number
-  newMembersToday: number
-  hoursWorkedToday: number
+interface FormData {
+  [key: string]: any
 }
 
-interface QuickActionModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title: string
-  children: React.ReactNode
-}
-
-function QuickActionModal({ isOpen, onClose, title, children }: QuickActionModalProps) {
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-3 max-h-[90vh] overflow-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-50 px-4 py-3 rounded-t-xl">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-[var(--luxury-charcoal)]">{title}</h3>
-            <button
-              onClick={onClose}
-              className="w-7 h-7 rounded-md bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-400 hover:text-gray-600"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-        <div className="p-4">
-          {children}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function VisitForm({ onSuccess }: { onSuccess: () => void }) {
   const [membershipNumber, setMembershipNumber] = useState('')
@@ -95,45 +56,47 @@ function VisitForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1.5">
-          Número de Membresía
-        </label>
-        <input
-          type="text"
-          value={membershipNumber}
-          onChange={(e) => setMembershipNumber(e.target.value)}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
-          placeholder="Ej: GM001"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1.5">
-          Notas (opcional)
-        </label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={2}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-sm"
-          placeholder="Comentarios adicionales..."
-        />
-      </div>
-      {message && (
-        <div className="p-2.5 rounded-lg bg-gray-50 text-xs text-gray-700">
-          {message}
+    <div className="p-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Número de Membresía
+          </label>
+          <input
+            type="text"
+            value={membershipNumber}
+            onChange={(e) => setMembershipNumber(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            placeholder="Ej: GM001"
+            required
+          />
         </div>
-      )}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full luxury-gradient text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
-      >
-        {loading ? 'Registrando...' : 'Registrar Visita'}
-      </button>
-    </form>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Notas (opcional)
+          </label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            placeholder="Comentarios adicionales..."
+          />
+        </div>
+        {message && (
+          <div className="p-3 rounded-lg bg-gray-50 text-sm text-gray-700">
+            {message}
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-medium disabled:opacity-50 transition-all"
+        >
+          {loading ? 'Registrando...' : 'Registrar Visita'}
+        </button>
+      </form>
+    </div>
   )
 }
 
@@ -410,242 +373,133 @@ function CashForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats>({
-    activeMembers: 0,
-    trainers: 0,
-    cashBalance: 0,
-    visitsToday: 0,
-    incomeToday: 0,
-    expensesToday: 0,
-    newMembersToday: 0,
-    hoursWorkedToday: 0
-  })
-  const [loading, setLoading] = useState(true)
   const [activeModal, setActiveModal] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetchStats()
-  }, [])
-
-  const fetchStats = async () => {
-    try {
-      const [membersRes, trainersRes, balanceRes, visitsRes] = await Promise.all([
-        fetch('/api/members'),
-        fetch('/api/trainers'),
-        fetch('/api/cash-transactions/balance'),
-        fetch('/api/member-visits')
-      ])
-
-      const [members, trainers, balance, visits] = await Promise.all([
-        membersRes.json(),
-        trainersRes.json(),
-        balanceRes.json(),
-        visitsRes.json()
-      ])
-
-      const today = new Date().toISOString().split('T')[0]
-      const visitsToday = visits.filter((visit: any) => 
-        visit.visitDate.startsWith(today)
-      ).length
-
-      const activeMembersCount = members.filter((member: any) => member.active).length
-      const activeTrainersCount = trainers.filter((trainer: any) => trainer.active).length
-
-      setStats({
-        activeMembers: activeMembersCount,
-        trainers: activeTrainersCount,
-        cashBalance: balance.balance || 0,
-        visitsToday,
-        incomeToday: 0,
-        expensesToday: 0,
-        newMembersToday: 0,
-        hoursWorkedToday: 0
-      })
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleModalClose = () => {
     setActiveModal(null)
-    fetchStats() // Refresh stats when modal closes
   }
 
-  const kpiCards = [
+  const mainActions = [
     {
-      title: 'Miembros Activos',
-      value: stats.activeMembers,
-      icon: Users,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600'
+      title: 'Registrar Visita',
+      description: 'Entrada de miembro al gimnasio',
+      icon: UserPlus,
+      color: 'blue' as const,
+      onClick: () => setActiveModal('visit')
     },
     {
-      title: 'Entrenadores',
-      value: stats.trainers,
-      icon: UserCheck,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600'
+      title: 'Horas Entrenador',
+      description: 'Registrar sesión de entrenamiento',
+      icon: Clock,
+      color: 'green' as const,
+      onClick: () => setActiveModal('trainer')
     },
     {
-      title: 'Saldo Caja',
-      value: `$${stats.cashBalance.toLocaleString()}`,
-      icon: DollarSign,
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600'
+      title: 'Caja Chica',
+      description: 'Ingresos y gastos del día',
+      icon: CreditCard,
+      color: 'orange' as const,
+      onClick: () => setActiveModal('cash')
     },
     {
-      title: 'Visitas Hoy',
-      value: stats.visitsToday,
-      icon: Calendar,
-      color: 'from-orange-500 to-orange-600',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-600'
+      title: 'Personal Limpieza',
+      description: 'Registrar horas de limpieza',
+      icon: Brush,
+      color: 'red' as const,
+      onClick: () => setActiveModal('cleaning')
     }
   ]
 
-  const quickActions = [
+  const quickActionsData = [
     {
-      id: 'visit',
-      title: 'Registrar Visita',
-      description: 'Registrar entrada de miembro',
-      icon: UserPlus,
-      color: 'from-blue-500 to-blue-600',
-      hoverColor: 'hover:from-blue-600 hover:to-blue-700'
+      id: 'register',
+      label: 'Registrar',
+      icon: FileText,
+      color: 'blue' as const,
+      onClick: () => setActiveModal('visit')
     },
     {
-      id: 'cash',
-      title: 'Caja Chica',
-      description: 'Ingreso o gasto',
-      icon: CreditCard,
-      color: 'from-green-500 to-green-600',
-      hoverColor: 'hover:from-green-600 hover:to-green-700'
+      id: 'members',
+      label: 'Miembros',
+      icon: Users,
+      color: 'green' as const,
+      onClick: () => window.location.href = '/members'
     },
     {
-      id: 'trainer',
-      title: 'Horas Entrenador',
-      description: 'Registrar sesión',
-      icon: Clock,
-      color: 'from-purple-500 to-purple-600',
-      hoverColor: 'hover:from-purple-600 hover:to-purple-700'
+      id: 'reports',
+      label: 'Reportes',
+      icon: BarChart3,
+      color: 'orange' as const,
+      onClick: () => alert('Próximamente')
     },
     {
-      id: 'activity',
-      title: 'Ver Actividad',
-      description: 'Actividad reciente',
-      icon: Activity,
-      color: 'from-gray-500 to-gray-600',
-      hoverColor: 'hover:from-gray-600 hover:to-gray-700'
+      id: 'settings',
+      label: 'Ajustes',
+      icon: Settings,
+      color: 'gray' as const,
+      onClick: () => window.location.href = '/config'
     }
   ]
 
   return (
-    <Layout title="Panel de Control" onQuickAction={setActiveModal}>
-      <div className="space-y-5">
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {kpiCards.map((card, index) => (
-            <div
+    <MobileLayout>
+      <div className="bg-gray-50 min-h-full">
+        {/* Main Actions */}
+        <div className="p-4 space-y-3">
+          {mainActions.map((action, index) => (
+            <ActionCard
               key={index}
-              className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200"
-            >
-              <div className="flex items-center justify-between">
-                <div className={`p-2.5 rounded-lg ${card.bgColor}`}>
-                  <card.icon className={`w-5 h-5 ${card.textColor}`} />
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 font-medium mb-0.5">{card.title}</p>
-                  <p className="text-xl font-bold text-[var(--luxury-charcoal)]">
-                    {loading ? '...' : card.value}
-                  </p>
-                </div>
-              </div>
-            </div>
+              title={action.title}
+              description={action.description}
+              icon={action.icon}
+              color={action.color}
+              onClick={action.onClick}
+            />
           ))}
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-[var(--luxury-charcoal)] mb-1">Acciones Rápidas</h2>
-            <p className="text-sm text-gray-500">Operaciones frecuentes del gimnasio</p>
-          </div>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {quickActions.map((action) => (
-              <button
-                key={action.id}
-                onClick={() => setActiveModal(action.id)}
-                className={`p-4 rounded-lg bg-gradient-to-br ${action.color} ${action.hoverColor} text-white transition-all duration-200 hover:shadow-md group`}
-              >
-                <div className="flex flex-col items-center text-center space-y-2">
-                  <div className="p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">
-                    <action.icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-sm">{action.title}</h3>
-                    <p className="text-xs opacity-90">{action.description}</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-[var(--luxury-charcoal)] mb-1">Actividad Reciente</h2>
-            <p className="text-sm text-gray-500">Últimas operaciones del sistema</p>
-          </div>
-          
-          <div className="text-center py-8 text-gray-400">
-            <Activity className="w-10 h-10 mx-auto mb-3 opacity-50" />
-            <p className="text-sm font-medium mb-1">No hay actividad reciente</p>
-            <p className="text-xs">Las operaciones aparecerán aquí una vez que comiences a usar el sistema</p>
-          </div>
-        </div>
+        <QuickActions actions={quickActionsData} />
       </div>
 
       {/* Modals */}
-      <QuickActionModal
+      <MobileModal
         isOpen={activeModal === 'visit'}
         onClose={handleModalClose}
-        title="Registrar Visita de Miembro"
+        title="Registrar Visita"
       >
         <VisitForm onSuccess={handleModalClose} />
-      </QuickActionModal>
+      </MobileModal>
 
-      <QuickActionModal
-        isOpen={activeModal === 'cash'}
-        onClose={handleModalClose}
-        title="Registrar Transacción"
-      >
-        <CashForm onSuccess={handleModalClose} />
-      </QuickActionModal>
-
-      <QuickActionModal
+      <MobileModal
         isOpen={activeModal === 'trainer'}
         onClose={handleModalClose}
-        title="Registrar Sesión de Entrenador"
+        title="Horas Entrenador"
       >
-        <TrainerSessionForm onSuccess={handleModalClose} />
-      </QuickActionModal>
-
-      <QuickActionModal
-        isOpen={activeModal === 'activity'}
-        onClose={handleModalClose}
-        title="Actividad Reciente"
-      >
-        <div className="text-center py-8 text-gray-500">
-          <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>Vista detallada de actividad próximamente</p>
+        <div className="p-4">
+          <TrainerSessionForm onSuccess={handleModalClose} />
         </div>
-      </QuickActionModal>
-    </Layout>
+      </MobileModal>
+
+      <MobileModal
+        isOpen={activeModal === 'cash'}
+        onClose={handleModalClose}
+        title="Caja Chica"
+      >
+        <div className="p-4">
+          <CashForm onSuccess={handleModalClose} />
+        </div>
+      </MobileModal>
+
+      <MobileModal
+        isOpen={activeModal === 'cleaning'}
+        onClose={handleModalClose}
+        title="Personal Limpieza"
+      >
+        <div className="p-4">
+          <p className="text-gray-500">Formulario de limpieza próximamente</p>
+        </div>
+      </MobileModal>
+    </MobileLayout>
   )
 }

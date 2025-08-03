@@ -49,13 +49,13 @@ export default function PinLogin() {
   const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm border border-gray-100">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 luxury-gradient rounded-xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-xl font-bold">GM</span>
           </div>
-          <h1 className="text-2xl font-semibold luxury-text-gradient mb-1">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-1">
             Gym Manager
           </h1>
           <p className="text-sm text-gray-500">Ingresa tu PIN para acceder</p>
@@ -68,7 +68,7 @@ export default function PinLogin() {
                 key={index}
                 className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-200 ${
                   pin.length > index
-                    ? 'luxury-gradient border-[var(--luxury-gold)]'
+                    ? 'bg-blue-600 border-blue-600'
                     : 'border-gray-300'
                 }`}
               />
@@ -103,7 +103,7 @@ export default function PinLogin() {
           <button
             onClick={handleSubmit}
             disabled={loading || pin.length !== 4}
-            className="h-12 luxury-gradient hover:opacity-90 text-white rounded-lg transition-all duration-150 disabled:opacity-50 flex items-center justify-center text-sm font-medium"
+            className="h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-150 disabled:opacity-50 flex items-center justify-center text-sm font-medium"
           >
             {loading ? '...' : '✓'}
           </button>

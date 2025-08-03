@@ -1,11 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Layout from '@/components/Layout'
+import { useEffect, useState } from 'react'
+import MobileLayout from '@/components/MobileLayout'
+import SubTabs from '@/components/SubTabs'
+import MobileModal from '@/components/MobileModal'
 import { 
-  Plus, Edit, Trash2, User, CreditCard, Calendar, 
-  Clock, MapPin, Phone, Mail, Eye, AlertTriangle,
-  CheckCircle, XCircle, Users
+  Search, 
+  UserPlus, 
+  Phone, 
+  Mail, 
+  Edit,
+  Eye,
+  CheckCircle,
+  AlertTriangle,
+  XCircle
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
@@ -30,6 +38,7 @@ interface Member {
   active: boolean
   createdAt: string
   memberships: Membership[]
+  visits?: any[]
   _count: {
     visits: number
   }
@@ -46,27 +55,21 @@ interface Membership {
   plan: Plan
 }
 
-interface MemberVisit {
-  id: string
-  visitDate: string
-  notes: string | null
-  member: Member
-}
-
 export default function MembersPage() {
+  const [activeTab, setActiveTab] = useState('list')
   const [members, setMembers] = useState<Member[]>([])
   const [plans, setPlans] = useState<Plan[]>([])
-  const [visits, setVisits] = useState<MemberVisit[]>([])
-  const [showMemberForm, setShowMemberForm] = useState(false)
-  const [showMembershipForm, setShowMembershipForm] = useState(false)
-  const [showPlanForm, setShowPlanForm] = useState(false)
-  const [showVisitForm, setShowVisitForm] = useState(false)
-  const [showMemberDetail, setShowMemberDetail] = useState(false)
-  const [editingMember, setEditingMember] = useState<Member | null>(null)
-  const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'members' | 'plans' | 'visits'>('members')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [modalType, setModalType] = useState<'new' | 'details' | 'edit' | 'membership'>('new')
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+
+  const tabs = [
+    { id: 'list', label: 'Lista' },
+    { id: 'register', label: 'Registrar' },
+    { id: 'memberships', label: 'Membresías' }
+  ]
 
   const [memberForm, setMemberForm] = useState({
     firstName: '',
@@ -74,14 +77,6 @@ export default function MembersPage() {
     gender: 'M',
     phone: '',
     email: '',
-  })
-
-  const [planForm, setPlanForm] = useState({
-    name: '',
-    durationInDays: '',
-    classesPerWeek: '',
-    totalClasses: '',
-    price: '',
   })
 
   const [membershipForm, setMembershipForm] = useState({
@@ -92,22 +87,15 @@ export default function MembersPage() {
     totalPaid: '',
   })
 
-  const [visitForm, setVisitForm] = useState({
-    memberId: '',
-    visitDate: new Date().toISOString().split('T')[0],
-    notes: '',
-  })
-
   useEffect(() => {
     fetchData()
   }, [])
 
   const fetchData = async () => {
     try {
-      const [membersRes, plansRes, visitsRes] = await Promise.all([
+      const [membersRes, plansRes] = await Promise.all([
         fetch('/api/members'),
         fetch('/api/plans'),
-        fetch(`/api/member-visits?date=${new Date().toISOString().split('T')[0]}`),
       ])
 
       if (membersRes.ok) {
@@ -119,11 +107,6 @@ export default function MembersPage() {
         const plansData = await plansRes.json()
         setPlans(plansData)
       }
-
-      if (visitsRes.ok) {
-        const visitsData = await visitsRes.json()
-        setVisits(visitsData)
-      }
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -134,8 +117,8 @@ export default function MembersPage() {
   const handleMemberSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const url = editingMember ? `/api/members/${editingMember.id}` : '/api/members'
-      const method = editingMember ? 'PUT' : 'POST'
+      const url = selectedMember ? `/api/members/${selectedMember.id}` : '/api/members'
+      const method = selectedMember ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
         method,
@@ -145,35 +128,10 @@ export default function MembersPage() {
 
       if (response.ok) {
         await fetchData()
-        setShowMemberForm(false)
-        setEditingMember(null)
-        setMemberForm({ firstName: '', lastName: '', gender: 'M', phone: '', email: '' })
+        closeModal()
       }
     } catch (error) {
       console.error('Error saving member:', error)
-    }
-  }
-
-  const handlePlanSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const url = editingPlan ? `/api/plans/${editingPlan.id}` : '/api/plans'
-      const method = editingPlan ? 'PUT' : 'POST'
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(planForm),
-      })
-
-      if (response.ok) {
-        await fetchData()
-        setShowPlanForm(false)
-        setEditingPlan(null)
-        setPlanForm({ name: '', durationInDays: '', classesPerWeek: '', totalClasses: '', price: '' })
-      }
-    } catch (error) {
-      console.error('Error saving plan:', error)
     }
   }
 
@@ -188,376 +146,217 @@ export default function MembersPage() {
 
       if (response.ok) {
         await fetchData()
-        setShowMembershipForm(false)
-        setMembershipForm({
-          memberId: '',
-          planId: '',
-          startDate: new Date().toISOString().split('T')[0],
-          paymentMethod: 'Efectivo',
-          totalPaid: '',
-        })
+        closeModal()
       }
     } catch (error) {
       console.error('Error creating membership:', error)
     }
   }
 
-  const handleVisitSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const response = await fetch('/api/member-visits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(visitForm),
+  const openModal = (type: 'new' | 'details' | 'edit' | 'membership', member?: Member) => {
+    setModalType(type)
+    setSelectedMember(member || null)
+    
+    if (type === 'edit' && member) {
+      setMemberForm({
+        firstName: member.firstName,
+        lastName: member.lastName,
+        gender: member.gender,
+        phone: member.phone || '',
+        email: member.email || '',
       })
-
-      if (response.ok) {
-        await fetchData()
-        setShowVisitForm(false)
-        setVisitForm({
-          memberId: '',
-          visitDate: new Date().toISOString().split('T')[0],
-          notes: '',
-        })
-      } else {
-        const error = await response.json()
-        alert(error.error)
-      }
-    } catch (error) {
-      console.error('Error registering visit:', error)
+    } else if (type === 'new') {
+      setMemberForm({
+        firstName: '',
+        lastName: '',
+        gender: 'M',
+        phone: '',
+        email: '',
+      })
     }
+    
+    setShowModal(true)
   }
 
-  const handleEditMember = (member: Member) => {
-    setEditingMember(member)
+  const closeModal = () => {
+    setShowModal(false)
+    setSelectedMember(null)
     setMemberForm({
-      firstName: member.firstName,
-      lastName: member.lastName,
-      gender: member.gender,
-      phone: member.phone || '',
-      email: member.email || '',
+      firstName: '',
+      lastName: '',
+      gender: 'M',
+      phone: '',
+      email: '',
     })
-    setShowMemberForm(true)
-  }
-
-  const handleEditPlan = (plan: Plan) => {
-    setEditingPlan(plan)
-    setPlanForm({
-      name: plan.name,
-      durationInDays: plan.durationInDays.toString(),
-      classesPerWeek: plan.classesPerWeek.toString(),
-      totalClasses: plan.totalClasses.toString(),
-      price: plan.price.toString(),
+    setMembershipForm({
+      memberId: '',
+      planId: '',
+      startDate: new Date().toISOString().split('T')[0],
+      paymentMethod: 'Efectivo',
+      totalPaid: '',
     })
-    setShowPlanForm(true)
-  }
-
-  const handleViewMember = async (member: Member) => {
-    try {
-      const response = await fetch(`/api/members/${member.id}`)
-      if (response.ok) {
-        const memberData = await response.json()
-        setSelectedMember(memberData)
-        setShowMemberDetail(true)
-      }
-    } catch (error) {
-      console.error('Error fetching member details:', error)
-    }
   }
 
   const getMembershipStatus = (member: Member) => {
     const activeMembership = member.memberships.find(m => m.active)
-    if (!activeMembership) return { status: 'inactive', message: 'Sin membresía' }
+    if (!activeMembership) return { status: 'inactive', message: 'Sin membresía', icon: XCircle, color: 'text-red-500' }
 
     const now = new Date()
     const endDate = new Date(activeMembership.endDate)
     const daysUntilExpiry = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     const remainingClasses = activeMembership.plan.totalClasses - activeMembership.classesUsed
 
-    if (endDate < now) return { status: 'expired', message: 'Vencida' }
-    if (daysUntilExpiry <= 3) return { status: 'expiring', message: `Vence en ${daysUntilExpiry} días` }
-    if (remainingClasses <= 1) return { status: 'low_classes', message: `${remainingClasses} clases restantes` }
+    if (endDate < now) return { status: 'expired', message: 'Vencida', icon: XCircle, color: 'text-red-500' }
+    if (daysUntilExpiry <= 3) return { status: 'expiring', message: `Vence en ${daysUntilExpiry} días`, icon: AlertTriangle, color: 'text-yellow-500' }
+    if (remainingClasses <= 1) return { status: 'low_classes', message: `${remainingClasses} clases restantes`, icon: AlertTriangle, color: 'text-yellow-500' }
     
-    return { status: 'active', message: `${remainingClasses} clases restantes` }
+    return { status: 'active', message: `${remainingClasses} clases restantes`, icon: CheckCircle, color: 'text-green-500' }
   }
 
-  if (loading) {
-    return (
-      <Layout title="Control de Miembros">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-gray-500">Cargando...</div>
-        </div>
-      </Layout>
-    )
+  const filteredMembers = members.filter(member =>
+    `${member.firstName} ${member.lastName} ${member.membershipNumber}`.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const handleViewMemberDetails = async (member: Member) => {
+    try {
+      const response = await fetch(`/api/members/${member.id}`)
+      if (response.ok) {
+        const memberData = await response.json()
+        setSelectedMember(memberData)
+        openModal('details', memberData)
+      }
+    } catch (error) {
+      console.error('Error fetching member details:', error)
+    }
   }
 
-  return (
-    <Layout title="Control de Miembros">
-      <div className="space-y-6">
-        {/* Tabs */}
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-          {[
-            { id: 'members', label: 'Miembros', icon: '👥' },
-            { id: 'plans', label: 'Planes', icon: '📋' },
-            { id: 'visits', label: 'Visitas Hoy', icon: '📅' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Members Tab */}
-        {activeTab === 'members' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Miembros Registrados</h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowMembershipForm(true)}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
-                >
-                  <CreditCard size={20} />
-                  Nueva Membresía
-                </button>
-                <button
-                  onClick={() => setShowMemberForm(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-                >
-                  <Plus size={20} />
-                  Nuevo Miembro
-                </button>
-              </div>
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'list':
+        return (
+          <div className="p-4">
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Buscar miembros..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {members.map((member) => {
-                const status = getMembershipStatus(member)
-                return (
-                  <div key={member.id} className="bg-white rounded-lg shadow p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">
-                          {member.firstName} {member.lastName}
-                        </h3>
-                        <p className="text-sm text-gray-500">#{member.membershipNumber}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleViewMember(member)}
-                          className="text-green-600 hover:text-green-800"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleEditMember(member)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <Edit size={16} />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2 text-sm">
-                      <div className={`flex items-center gap-2 p-2 rounded ${
-                        status.status === 'active' ? 'bg-green-50 text-green-800' :
-                        status.status === 'expiring' || status.status === 'low_classes' ? 'bg-yellow-50 text-yellow-800' :
-                        'bg-red-50 text-red-800'
-                      }`}>
-                        {status.status === 'active' ? <CheckCircle size={16} /> :
-                         status.status === 'expiring' || status.status === 'low_classes' ? <AlertTriangle size={16} /> :
-                         <XCircle size={16} />}
-                        {status.message}
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Users size={16} />
-                        {member._count.visits} visitas totales
-                      </div>
-                      
-                      {member.phone && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Phone size={16} />
-                          {member.phone}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Plans Tab */}
-        {activeTab === 'plans' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Planes Disponibles</h2>
-              <button
-                onClick={() => setShowPlanForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-              >
-                <Plus size={20} />
-                Nuevo Plan
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {plans.map((plan) => (
-                <div key={plan.id} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">{plan.name}</h3>
-                    <button
-                      onClick={() => handleEditPlan(plan)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <Edit size={16} />
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex justify-between">
-                      <span>Duración:</span>
-                      <span>{plan.durationInDays} días</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Clases/semana:</span>
-                      <span>{plan.classesPerWeek}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total clases:</span>
-                      <span>{plan.totalClasses}</span>
-                    </div>
-                    <div className="flex justify-between font-semibold text-green-600">
-                      <span>Precio:</span>
-                      <span>{formatCurrency(plan.price)}</span>
-                    </div>
-                  </div>
+            {/* Members List */}
+            <div className="space-y-3">
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-gray-500 mt-2">Cargando miembros...</p>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Visits Tab */}
-        {activeTab === 'visits' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Visitas de Hoy</h2>
-              <button
-                onClick={() => setShowVisitForm(true)}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
-              >
-                <MapPin size={20} />
-                Registrar Visita
-              </button>
-            </div>
-
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Miembro
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Hora
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Notas
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {visits.map((visit) => (
-                      <tr key={visit.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {visit.member.firstName} {visit.member.lastName}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                #{visit.member.membershipNumber}
-                              </div>
-                            </div>
+              ) : filteredMembers.length === 0 ? (
+                <div className="text-center py-8">
+                  <UserPlus className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500 mb-3">No hay miembros registrados</p>
+                  <button
+                    onClick={() => openModal('new')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                  >
+                    Registrar primer miembro
+                  </button>
+                </div>
+              ) : (
+                filteredMembers.map((member) => {
+                  const status = getMembershipStatus(member)
+                  return (
+                    <div key={member.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 text-base">
+                            {member.firstName} {member.lastName}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-2">#{member.membershipNumber}</p>
+                          
+                          {/* Status */}
+                          <div className={`flex items-center text-xs ${status.color} mb-2`}>
+                            <status.icon size={14} className="mr-1" />
+                            {status.message}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(visit.visitDate).toLocaleTimeString()}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {visit.notes || '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {visits.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 mb-2">
-                    <Calendar size={48} className="mx-auto" />
-                  </div>
-                  <p className="text-gray-500">No hay visitas registradas hoy</p>
-                </div>
+                          
+                          {/* Contact Info */}
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                            {member.phone && (
+                              <div className="flex items-center">
+                                <Phone size={12} className="mr-1" />
+                                {member.phone}
+                              </div>
+                            )}
+                            {member.email && (
+                              <div className="flex items-center">
+                                <Mail size={12} className="mr-1" />
+                                {member.email}
+                              </div>
+                            )}
+                            <div>{member._count.visits} visitas</div>
+                          </div>
+                        </div>
+                        
+                        {/* Actions */}
+                        <div className="flex space-x-2 ml-3">
+                          <button
+                            onClick={() => handleViewMemberDetails(member)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => openModal('edit', member)}
+                            className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
               )}
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Member Form Modal */}
-      {showMemberForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingMember ? 'Editar Miembro' : 'Nuevo Miembro'}
-            </h3>
+        )
+      
+      case 'register':
+        return (
+          <div className="p-4">
             <form onSubmit={handleMemberSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
                 <input
                   type="text"
                   value={memberForm.firstName}
                   onChange={(e) => setMemberForm({ ...memberForm, firstName: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Apellido
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Apellido</label>
                 <input
                   type="text"
                   value={memberForm.lastName}
                   onChange={(e) => setMemberForm({ ...memberForm, lastName: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Género
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Género</label>
                 <select
                   value={memberForm.gender}
                   onChange={(e) => setMemberForm({ ...memberForm, gender: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 >
                   <option value="M">Masculino</option>
@@ -565,187 +364,141 @@ export default function MembersPage() {
                   <option value="O">Otro</option>
                 </select>
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono (opcional)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono (opcional)</label>
                 <input
                   type="tel"
                   value={memberForm.phone}
                   onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email (opcional)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email (opcional)</label>
                 <input
                   type="email"
                   value={memberForm.email}
                   onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-                >
-                  {editingMember ? 'Actualizar' : 'Crear'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMemberForm(false)
-                    setEditingMember(null)
-                    setMemberForm({ firstName: '', lastName: '', gender: 'M', phone: '', email: '' })
-                  }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
-                >
-                  Cancelar
-                </button>
-              </div>
+              
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
+              >
+                Registrar Miembro
+              </button>
             </form>
           </div>
-        </div>
-      )}
-
-      {/* Plan Form Modal */}
-      {showPlanForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingPlan ? 'Editar Plan' : 'Nuevo Plan'}
-            </h3>
-            <form onSubmit={handlePlanSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre del Plan
-                </label>
-                <input
-                  type="text"
-                  value={planForm.name}
-                  onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Duración en Días
-                </label>
-                <input
-                  type="number"
-                  value={planForm.durationInDays}
-                  onChange={(e) => setPlanForm({ ...planForm, durationInDays: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  min="1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Clases por Semana
-                </label>
-                <input
-                  type="number"
-                  value={planForm.classesPerWeek}
-                  onChange={(e) => setPlanForm({ ...planForm, classesPerWeek: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  min="1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Total de Clases
-                </label>
-                <input
-                  type="number"
-                  value={planForm.totalClasses}
-                  onChange={(e) => setPlanForm({ ...planForm, totalClasses: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  min="1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Precio (COP)
-                </label>
-                <input
-                  type="number"
-                  value={planForm.price}
-                  onChange={(e) => setPlanForm({ ...planForm, price: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  min="1"
-                  required
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-                >
-                  {editingPlan ? 'Actualizar' : 'Crear'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPlanForm(false)
-                    setEditingPlan(null)
-                    setPlanForm({ name: '', durationInDays: '', classesPerWeek: '', totalClasses: '', price: '' })
-                  }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
+        )
+      
+      case 'memberships':
+        return (
+          <div className="p-4">
+            <div className="mb-4">
+              <button
+                onClick={() => openModal('membership')}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
+              >
+                Nueva Membresía
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {members.filter(m => m.memberships.length > 0).map(member => (
+                <div key={member.id} className="bg-white rounded-xl p-4 border border-gray-200">
+                  <h3 className="font-semibold text-gray-900 mb-2">
+                    {member.firstName} {member.lastName}
+                  </h3>
+                  {member.memberships.map(membership => (
+                    <div key={membership.id} className={`p-3 rounded-lg border mb-2 ${
+                      membership.active ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+                    }`}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-medium">{membership.plan.name}</span>
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          membership.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {membership.active ? 'Activa' : 'Inactiva'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <div>Clases: {membership.classesUsed}/{membership.plan.totalClasses}</div>
+                        <div>Vence: {formatDate(new Date(membership.endDate))}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      
+      default:
+        return null
+    }
+  }
 
-      {/* Membership Form Modal */}
-      {showMembershipForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Nueva Membresía</h3>
+  return (
+    <MobileLayout>
+      <div className="bg-gray-50 min-h-full">
+        <SubTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
+        
+        {renderTabContent()}
+      </div>
+
+      {/* Modals */}
+      <MobileModal
+        isOpen={showModal}
+        onClose={closeModal}
+        title={
+          modalType === 'new' ? 'Nuevo Miembro' :
+          modalType === 'edit' ? 'Editar Miembro' :
+          modalType === 'membership' ? 'Nueva Membresía' :
+          'Detalles del Miembro'
+        }
+        size={modalType === 'details' ? 'lg' : 'md'}
+      >
+        {modalType === 'membership' && (
+          <div className="p-4">
             <form onSubmit={handleMembershipSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Miembro
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Miembro</label>
                 <select
                   value={membershipForm.memberId}
                   onChange={(e) => setMembershipForm({ ...membershipForm, memberId: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 >
                   <option value="">Seleccionar miembro...</option>
                   {members.map((member) => (
                     <option key={member.id} value={member.id}>
-                      {member.firstName} {member.lastName} - #{member.membershipNumber}
+                      {member.firstName} {member.lastName}
                     </option>
                   ))}
                 </select>
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Plan
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Plan</label>
                 <select
                   value={membershipForm.planId}
                   onChange={(e) => {
-                    const selectedPlan = plans.find(p => p.id === e.target.value)
+                    const plan = plans.find(p => p.id === e.target.value)
                     setMembershipForm({ 
                       ...membershipForm, 
                       planId: e.target.value,
-                      totalPaid: selectedPlan ? selectedPlan.price.toString() : ''
+                      totalPaid: plan ? plan.price.toString() : ''
                     })
                   }}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 >
                   <option value="">Seleccionar plan...</option>
@@ -756,225 +509,62 @@ export default function MembersPage() {
                   ))}
                 </select>
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha de Inicio
-                </label>
-                <input
-                  type="date"
-                  value={membershipForm.startDate}
-                  onChange={(e) => setMembershipForm({ ...membershipForm, startDate: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Forma de Pago
-                </label>
-                <select
-                  value={membershipForm.paymentMethod}
-                  onChange={(e) => setMembershipForm({ ...membershipForm, paymentMethod: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="Efectivo">Efectivo</option>
-                  <option value="Transferencia">Transferencia</option>
-                  <option value="Tarjeta">Tarjeta</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Monto Pagado (COP)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Monto Pagado</label>
                 <input
                   type="number"
                   value={membershipForm.totalPaid}
                   onChange={(e) => setMembershipForm({ ...membershipForm, totalPaid: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  min="1"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
-                >
-                  Crear Membresía
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMembershipForm(false)
-                    setMembershipForm({
-                      memberId: '',
-                      planId: '',
-                      startDate: new Date().toISOString().split('T')[0],
-                      paymentMethod: 'Efectivo',
-                      totalPaid: '',
-                    })
-                  }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Visit Form Modal */}
-      {showVisitForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Registrar Visita</h3>
-            <form onSubmit={handleVisitSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Miembro
-                </label>
-                <select
-                  value={visitForm.memberId}
-                  onChange={(e) => setVisitForm({ ...visitForm, memberId: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="">Seleccionar miembro...</option>
-                  {members.filter(m => {
-                    const status = getMembershipStatus(m)
-                    return status.status === 'active' || status.status === 'expiring' || status.status === 'low_classes'
-                  }).map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.firstName} {member.lastName} - #{member.membershipNumber}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha de Visita
-                </label>
-                <input
-                  type="date"
-                  value={visitForm.visitDate}
-                  onChange={(e) => setVisitForm({ ...visitForm, visitDate: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notas (opcional)
-                </label>
-                <textarea
-                  value={visitForm.notes}
-                  onChange={(e) => setVisitForm({ ...visitForm, notes: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  rows={3}
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700"
-                >
-                  Registrar Visita
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowVisitForm(false)
-                    setVisitForm({
-                      memberId: '',
-                      visitDate: new Date().toISOString().split('T')[0],
-                      notes: '',
-                    })
-                  }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Member Detail Modal */}
-      {showMemberDetail && selectedMember && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold">
-                {selectedMember.firstName} {selectedMember.lastName}
-              </h3>
+              
               <button
-                onClick={() => setShowMemberDetail(false)}
-                className="text-gray-500 hover:text-gray-700"
+                type="submit"
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
               >
-                <XCircle size={24} />
+                Crear Membresía
               </button>
-            </div>
-            
-            <div className="space-y-6">
+            </form>
+          </div>
+        )}
+
+        {modalType === 'details' && selectedMember && (
+          <div className="p-4">
+            <div className="space-y-4">
               {/* Member Info */}
               <div>
-                <h4 className="font-semibold mb-3">Información Personal</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Número de Membresía:</span>
-                    <p className="font-medium">#{selectedMember.membershipNumber}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Género:</span>
-                    <p className="font-medium">{selectedMember.gender === 'M' ? 'Masculino' : selectedMember.gender === 'F' ? 'Femenino' : 'Otro'}</p>
-                  </div>
-                  {selectedMember.phone && (
-                    <div>
-                      <span className="text-gray-600">Teléfono:</span>
-                      <p className="font-medium">{selectedMember.phone}</p>
-                    </div>
-                  )}
-                  {selectedMember.email && (
-                    <div>
-                      <span className="text-gray-600">Email:</span>
-                      <p className="font-medium">{selectedMember.email}</p>
-                    </div>
-                  )}
+                <h4 className="font-semibold mb-2">Información Personal</h4>
+                <div className="text-sm space-y-1 text-gray-600">
+                  <div>Número: #{selectedMember.membershipNumber}</div>
+                  <div>Género: {selectedMember.gender === 'M' ? 'Masculino' : selectedMember.gender === 'F' ? 'Femenino' : 'Otro'}</div>
+                  {selectedMember.phone && <div>Teléfono: {selectedMember.phone}</div>}
+                  {selectedMember.email && <div>Email: {selectedMember.email}</div>}
                 </div>
               </div>
 
               {/* Memberships */}
               <div>
-                <h4 className="font-semibold mb-3">Historial de Membresías</h4>
-                <div className="space-y-3">
+                <h4 className="font-semibold mb-2">Membresías</h4>
+                <div className="space-y-2">
                   {selectedMember.memberships.map((membership) => (
-                    <div key={membership.id} className={`p-4 rounded-lg border ${
+                    <div key={membership.id} className={`p-3 rounded-lg border text-sm ${
                       membership.active ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
                     }`}>
-                      <div className="flex justify-between items-start mb-2">
-                        <h5 className="font-medium">{membership.plan.name}</h5>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-medium">{membership.plan.name}</span>
+                        <span className={`px-2 py-1 rounded text-xs ${
                           membership.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                         }`}>
                           {membership.active ? 'Activa' : 'Inactiva'}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                        <div>
-                          <span>Inicio:</span> {formatDate(new Date(membership.startDate))}
-                        </div>
-                        <div>
-                          <span>Fin:</span> {formatDate(new Date(membership.endDate))}
-                        </div>
-                        <div>
-                          <span>Clases usadas:</span> {membership.classesUsed}/{membership.plan.totalClasses}
-                        </div>
-                        <div>
-                          <span>Pago:</span> {formatCurrency(membership.totalPaid)} ({membership.paymentMethod})
-                        </div>
+                      <div className="text-xs text-gray-600 space-y-1">
+                        <div>Período: {formatDate(new Date(membership.startDate))} - {formatDate(new Date(membership.endDate))}</div>
+                        <div>Clases: {membership.classesUsed}/{membership.plan.totalClasses}</div>
+                        <div>Pagado: {formatCurrency(membership.totalPaid)} ({membership.paymentMethod})</div>
                       </div>
                     </div>
                   ))}
@@ -982,29 +572,27 @@ export default function MembersPage() {
               </div>
 
               {/* Recent Visits */}
-              <div>
-                <h4 className="font-semibold mb-3">Visitas Recientes</h4>
-                {selectedMember.visits && selectedMember.visits.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedMember.visits.map((visit: any) => (
-                      <div key={visit.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <span className="text-sm">
-                          {formatDate(new Date(visit.visitDate))} - {new Date(visit.visitDate).toLocaleTimeString()}
-                        </span>
-                        {visit.notes && (
-                          <span className="text-sm text-gray-600">{visit.notes}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">No hay visitas registradas</p>
-                )}
-              </div>
+              {selectedMember.visits && (
+                <div>
+                  <h4 className="font-semibold mb-2">Visitas Recientes</h4>
+                  {selectedMember.visits.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedMember.visits.slice(0, 5).map((visit: any) => (
+                        <div key={visit.id} className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
+                          <span>{formatDate(new Date(visit.visitDate))}</span>
+                          <span className="text-gray-500">{new Date(visit.visitDate).toLocaleTimeString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No hay visitas registradas</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
-    </Layout>
+        )}
+      </MobileModal>
+    </MobileLayout>
   )
 }
