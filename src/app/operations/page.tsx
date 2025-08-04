@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import MobileLayout from '@/components/MobileLayout'
+import Layout from '@/components/Layout'
 import SubTabs from '@/components/SubTabs'
 import MobileModal from '@/components/MobileModal'
 import { 
@@ -248,7 +248,7 @@ export default function OperationsPage() {
   }
 
   return (
-    <MobileLayout>
+    <Layout title="Operaciones">
       <div className="bg-gray-50 min-h-full">
         <SubTabs
           tabs={tabs}
@@ -275,6 +275,6 @@ export default function OperationsPage() {
           {modalType === 'cleaning' && <CleaningSessionForm onSuccess={closeModal} />}
         </div>
       </MobileModal>
-    </MobileLayout>
+    </Layout>
   )
 }

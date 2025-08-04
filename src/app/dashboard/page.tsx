@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import MobileLayout from '@/components/MobileLayout'
+import Layout from '@/components/Layout'
 import ActionCard from '@/components/ActionCard'
 import QuickActions from '@/components/QuickActions'
 import MobileModal from '@/components/MobileModal'
@@ -171,7 +171,7 @@ export default function DashboardPage() {
   ]
 
   return (
-    <MobileLayout>
+    <Layout title="Dashboard">
       <div className="bg-gray-50 min-h-full">
         {/* Main Actions */}
         <div className="p-4 space-y-3">
@@ -223,6 +223,6 @@ export default function DashboardPage() {
       >
         <CleaningSessionForm onSuccess={handleModalClose} />
       </MobileModal>
-    </MobileLayout>
+    </Layout>
   )
 }

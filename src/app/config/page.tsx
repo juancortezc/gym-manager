@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import MobileLayout from '@/components/MobileLayout'
+import Layout from '@/components/Layout'
 import SubTabs from '@/components/SubTabs'
 import MobileModal from '@/components/MobileModal'
 import { 
@@ -293,7 +293,7 @@ export default function ConfigPage() {
   }
 
   return (
-    <MobileLayout>
+    <Layout title="Configuración">
       <div className="bg-gray-50 min-h-full">
         <SubTabs
           tabs={tabs}
@@ -376,6 +376,6 @@ export default function ConfigPage() {
           </div>
         </div>
       </MobileModal>
-    </MobileLayout>
+    </Layout>
   )
 }

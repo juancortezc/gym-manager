@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import MobileLayout from '@/components/MobileLayout'
+import Layout from '@/components/Layout'
 import SubTabs from '@/components/SubTabs'
 import MobileModal from '@/components/MobileModal'
 import { 
@@ -341,25 +341,119 @@ export default function MembersPage() {
             </div>
 
             {/* Members List */}
-            <div className="space-y-3">
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="text-gray-500 mt-2">Cargando miembros...</p>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="text-gray-500 mt-2">Cargando miembros...</p>
+              </div>
+            ) : filteredMembers.length === 0 ? (
+              <div className="text-center py-8">
+                <UserPlus className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500 mb-3">No hay miembros registrados</p>
+                <button
+                  onClick={() => openModal('new')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                >
+                  Registrar primer miembro
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Miembro
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Estado Membresía
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Contacto
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Visitas
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredMembers.map((member) => {
+                        const status = getMembershipStatus(member)
+                        return (
+                          <tr key={member.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {member.firstName} {member.lastName}
+                                </div>
+                                <div className="text-sm text-gray-500">#{member.membershipNumber}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className={`flex items-center text-sm ${status.color}`}>
+                                <status.icon size={16} className="mr-2" />
+                                {status.message}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <div className="space-y-1">
+                                {member.phone && (
+                                  <div className="flex items-center">
+                                    <Phone size={12} className="mr-1" />
+                                    {member.phone}
+                                  </div>
+                                )}
+                                {member.email && (
+                                  <div className="flex items-center">
+                                    <Mail size={12} className="mr-1" />
+                                    {member.email}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {member._count.visits}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleViewMemberDetails(member)}
+                                  className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                                  title="Ver detalles"
+                                >
+                                  <Eye size={16} />
+                                </button>
+                                <button
+                                  onClick={() => openModal('edit', member)}
+                                  className="text-gray-600 hover:text-gray-900 p-1 rounded"
+                                  title="Editar miembro"
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => openModal('renew', member)}
+                                  className="text-green-600 hover:text-green-900 p-1 rounded font-bold"
+                                  title="Nueva/Renovar membresía"
+                                >
+                                  +M
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              ) : filteredMembers.length === 0 ? (
-                <div className="text-center py-8">
-                  <UserPlus className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-3">No hay miembros registrados</p>
-                  <button
-                    onClick={() => openModal('new')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
-                  >
-                    Registrar primer miembro
-                  </button>
-                </div>
-              ) : (
-                filteredMembers.map((member) => {
+
+                {/* Mobile Cards */}
+                <div className="lg:hidden space-y-3">
+                  {filteredMembers.map((member) => {
                   const status = getMembershipStatus(member)
                   return (
                     <div key={member.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
@@ -421,9 +515,10 @@ export default function MembersPage() {
                       </div>
                     </div>
                   )
-                })
-              )}
-            </div>
+                  })}
+                </div>
+              </>
+            )}
           </div>
         )
       
@@ -553,7 +648,7 @@ export default function MembersPage() {
   }
 
   return (
-    <MobileLayout>
+    <Layout title="Miembros">
       <div className="bg-gray-50 min-h-full">
         <SubTabs
           tabs={tabs}
@@ -788,6 +883,6 @@ export default function MembersPage() {
           </div>
         )}
       </MobileModal>
-    </MobileLayout>
+    </Layout>
   )
 }
