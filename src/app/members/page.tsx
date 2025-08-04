@@ -62,13 +62,12 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showModal, setShowModal] = useState(false)
-  const [modalType, setModalType] = useState<'new' | 'details' | 'edit' | 'membership'>('new')
+  const [modalType, setModalType] = useState<'new' | 'details' | 'edit' | 'renew'>('new')
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
 
   const tabs = [
     { id: 'list', label: 'Lista' },
-    { id: 'register', label: 'Registrar' },
-    { id: 'memberships', label: 'Membresías' }
+    { id: 'register', label: 'Registrar' }
   ]
 
   const [memberForm, setMemberForm] = useState({
@@ -201,7 +200,9 @@ export default function MembersPage() {
     e.preventDefault()
     try {
       const plan = plans.find(p => p.id === membershipForm.planId)
-      if (plan) {
+      const memberId = selectedMember?.id || membershipForm.memberId
+      
+      if (plan && memberId) {
         const startDate = new Date(membershipForm.startDate)
         const endDate = new Date(startDate.getTime() + plan.durationInDays * 24 * 60 * 60 * 1000)
         
@@ -209,9 +210,11 @@ export default function MembersPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ...membershipForm,
+            memberId,
+            planId: membershipForm.planId,
             startDate: startDate.toISOString(),
             endDate: endDate.toISOString(),
+            paymentMethod: membershipForm.paymentMethod,
             totalPaid: parseFloat(membershipForm.totalPaid),
           }),
         })
@@ -226,7 +229,7 @@ export default function MembersPage() {
     }
   }
 
-  const openModal = (type: 'new' | 'details' | 'edit' | 'membership', member?: Member) => {
+  const openModal = (type: 'new' | 'details' | 'edit' | 'renew', member?: Member) => {
     setModalType(type)
     setSelectedMember(member || null)
     
@@ -237,6 +240,9 @@ export default function MembersPage() {
         gender: member.gender,
         phone: member.phone || '',
         email: member.email || '',
+        planId: '',
+        startDate: new Date().toISOString().split('T')[0],
+        paymentMethod: 'Efectivo',
       })
     } else if (type === 'new') {
       setMemberForm({
@@ -248,6 +254,14 @@ export default function MembersPage() {
         planId: '',
         startDate: new Date().toISOString().split('T')[0],
         paymentMethod: 'Efectivo',
+      })
+    } else if (type === 'renew' && member) {
+      setMembershipForm({
+        memberId: member.id,
+        planId: '',
+        startDate: new Date().toISOString().split('T')[0],
+        paymentMethod: 'Efectivo',
+        totalPaid: '',
       })
     }
     
@@ -381,18 +395,27 @@ export default function MembersPage() {
                         </div>
                         
                         {/* Actions */}
-                        <div className="flex space-x-2 ml-3">
+                        <div className="flex space-x-1 ml-3">
                           <button
                             onClick={() => handleViewMemberDetails(member)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Ver detalles"
                           >
                             <Eye size={16} />
                           </button>
                           <button
                             onClick={() => openModal('edit', member)}
                             className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                            title="Editar miembro"
                           >
                             <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => openModal('renew', member)}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors text-xs font-medium"
+                            title="Nueva/Renovar membresía"
+                          >
+                            +M
                           </button>
                         </div>
                       </div>
@@ -523,47 +546,6 @@ export default function MembersPage() {
           </div>
         )
       
-      case 'memberships':
-        return (
-          <div className="p-4">
-            <div className="mb-4">
-              <button
-                onClick={() => openModal('membership')}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
-              >
-                Nueva Membresía
-              </button>
-            </div>
-            
-            <div className="space-y-3">
-              {members.filter(m => m.memberships.length > 0).map(member => (
-                <div key={member.id} className="bg-white rounded-xl p-4 border border-gray-200">
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    {member.firstName} {member.lastName}
-                  </h3>
-                  {member.memberships.map(membership => (
-                    <div key={membership.id} className={`p-3 rounded-lg border mb-2 ${
-                      membership.active ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
-                    }`}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium">{membership.plan.name}</span>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          membership.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {membership.active ? 'Activa' : 'Inactiva'}
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        <div>Clases: {membership.classesUsed}/{membership.plan.totalClasses}</div>
-                        <div>Vence: {formatDate(new Date(membership.endDate))}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        )
       
       default:
         return null
@@ -589,29 +571,89 @@ export default function MembersPage() {
         title={
           modalType === 'new' ? 'Nuevo Miembro' :
           modalType === 'edit' ? 'Editar Miembro' :
-          modalType === 'membership' ? 'Nueva Membresía' :
+          modalType === 'renew' ? 'Nueva Membresía' :
           'Detalles del Miembro'
         }
         size={modalType === 'details' ? 'lg' : 'md'}
       >
-        {modalType === 'membership' && (
+        {modalType === 'edit' && (
+          <div className="p-4">
+            <form onSubmit={handleMemberSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                <input
+                  type="text"
+                  value={memberForm.firstName}
+                  onChange={(e) => setMemberForm({ ...memberForm, firstName: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Apellido</label>
+                <input
+                  type="text"
+                  value={memberForm.lastName}
+                  onChange={(e) => setMemberForm({ ...memberForm, lastName: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Género</label>
+                <select
+                  value={memberForm.gender}
+                  onChange={(e) => setMemberForm({ ...memberForm, gender: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="O">Otro</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono (opcional)</label>
+                <input
+                  type="tel"
+                  value={memberForm.phone}
+                  onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email (opcional)</label>
+                <input
+                  type="email"
+                  value={memberForm.email}
+                  onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
+              >
+                Actualizar Miembro
+              </button>
+            </form>
+          </div>
+        )}
+
+        {modalType === 'renew' && (
           <div className="p-4">
             <form onSubmit={handleMembershipSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Miembro</label>
-                <select
-                  value={membershipForm.memberId}
-                  onChange={(e) => setMembershipForm({ ...membershipForm, memberId: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="">Seleccionar miembro...</option>
-                  {members.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.firstName} {member.lastName}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                  {selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}` : 'Miembro seleccionado'}
+                </div>
+                <input type="hidden" value={selectedMember?.id || ''} />
               </div>
               
               <div>
