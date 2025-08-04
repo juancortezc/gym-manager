@@ -172,23 +172,52 @@ export default function DashboardPage() {
 
   return (
     <Layout title="Dashboard">
-      <div className="bg-gray-50 min-h-full">
-        {/* Main Actions */}
-        <div className="p-4 space-y-3">
-          {mainActions.map((action, index) => (
-            <ActionCard
-              key={index}
-              title={action.title}
-              description={action.description}
-              icon={action.icon}
-              color={action.color}
-              onClick={action.onClick}
-            />
-          ))}
+      <div className="space-y-6">
+        {/* Desktop Grid Layout */}
+        <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6">
+          {/* Main Actions Column */}
+          <div className="lg:col-span-2 space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900">Acciones Principales</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {mainActions.map((action, index) => (
+                <ActionCard
+                  key={index}
+                  title={action.title}
+                  description={action.description}
+                  icon={action.icon}
+                  color={action.color}
+                  onClick={action.onClick}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Actions Sidebar */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900">Acciones Rápidas</h2>
+            <QuickActions actions={quickActionsData} />
+          </div>
         </div>
 
-        {/* Quick Actions */}
-        <QuickActions actions={quickActionsData} />
+        {/* Mobile Layout */}
+        <div className="lg:hidden bg-gray-50 min-h-full">
+          {/* Main Actions */}
+          <div className="p-4 space-y-3">
+            {mainActions.map((action, index) => (
+              <ActionCard
+                key={index}
+                title={action.title}
+                description={action.description}
+                icon={action.icon}
+                color={action.color}
+                onClick={action.onClick}
+              />
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <QuickActions actions={quickActionsData} />
+        </div>
       </div>
 
       {/* Modals */}
