@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import MobileLayout from '@/components/MobileLayout'
 import SubTabs from '@/components/SubTabs'
 import MobileModal from '@/components/MobileModal'
@@ -8,15 +8,48 @@ import {
   Users,
   Brush,
   CreditCard,
-  Plus,
-  Edit,
-  Eye
+  Plus
 } from 'lucide-react'
 
 export default function ConfigPage() {
   const [activeTab, setActiveTab] = useState('trainers')
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState<'trainer' | 'cleaning' | 'plan'>('trainer')
+  
+  // Data states
+  const [trainers, setTrainers] = useState<any[]>([])
+  const [cleaningStaff, setCleaningStaff] = useState<any[]>([])
+  const [plans, setPlans] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [trainersRes, cleaningRes, plansRes] = await Promise.all([
+        fetch('/api/trainers'),
+        fetch('/api/cleaning-staff'),
+        fetch('/api/plans')
+      ])
+      
+      const [trainersData, cleaningData, plansData] = await Promise.all([
+        trainersRes.json(),
+        cleaningRes.json(),
+        plansRes.json()
+      ])
+      
+      setTrainers(trainersData.filter((t: any) => t.active))
+      setCleaningStaff(cleaningData.filter((c: any) => c.active))
+      setPlans(plansData.filter((p: any) => p.active))
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const tabs = [
     { id: 'trainers', label: 'Entrenadores' },
@@ -31,6 +64,8 @@ export default function ConfigPage() {
 
   const closeModal = () => {
     setShowModal(false)
+    // Refresh data after closing modal
+    fetchData()
   }
 
   const renderTabContent = () => {
@@ -50,11 +85,33 @@ export default function ConfigPage() {
             
             <div className="bg-white rounded-xl p-4 border border-gray-200">
               <h3 className="font-semibold text-gray-900 mb-3">Entrenadores Activos</h3>
-              <div className="text-center py-8 text-gray-500">
-                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">No hay entrenadores configurados</p>
-                <p className="text-xs text-gray-400 mt-1">Configura los entrenadores y sus tarifas por hora</p>
-              </div>
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+                  <p className="text-sm">Cargando entrenadores...</p>
+                </div>
+              ) : trainers.length > 0 ? (
+                <div className="space-y-3">
+                  {trainers.map((trainer) => (
+                    <div key={trainer.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <div className="font-medium text-gray-900">{trainer.name}</div>
+                        <div className="text-sm text-gray-500">{trainer.phone || 'Sin teléfono'}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-blue-600">${trainer.hourlyRate}/h</div>
+                        <div className="text-xs text-gray-500">Activo</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">No hay entrenadores configurados</p>
+                  <p className="text-xs text-gray-400 mt-1">Configura los entrenadores y sus tarifas por hora</p>
+                </div>
+              )}
             </div>
           </div>
         )
@@ -74,11 +131,33 @@ export default function ConfigPage() {
             
             <div className="bg-white rounded-xl p-4 border border-gray-200">
               <h3 className="font-semibold text-gray-900 mb-3">Personal de Limpieza</h3>
-              <div className="text-center py-8 text-gray-500">
-                <Brush className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">No hay personal de limpieza configurado</p>
-                <p className="text-xs text-gray-400 mt-1">Configura el personal de limpieza y sus tarifas por hora</p>
-              </div>
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="animate-spin w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+                  <p className="text-sm">Cargando personal...</p>
+                </div>
+              ) : cleaningStaff.length > 0 ? (
+                <div className="space-y-3">
+                  {cleaningStaff.map((staff) => (
+                    <div key={staff.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <div className="font-medium text-gray-900">{staff.name}</div>
+                        <div className="text-sm text-gray-500">{staff.phone || 'Sin teléfono'}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-green-600">${staff.hourlyRate}/h</div>
+                        <div className="text-xs text-gray-500">Activo</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Brush className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">No hay personal de limpieza configurado</p>
+                  <p className="text-xs text-gray-400 mt-1">Configura el personal de limpieza y sus tarifas por hora</p>
+                </div>
+              )}
             </div>
           </div>
         )
@@ -98,11 +177,34 @@ export default function ConfigPage() {
             
             <div className="bg-white rounded-xl p-4 border border-gray-200">
               <h3 className="font-semibold text-gray-900 mb-3">Planes de Membresía</h3>
-              <div className="text-center py-8 text-gray-500">
-                <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">No hay planes configurados</p>
-                <p className="text-xs text-gray-400 mt-1">Crea planes de membresía con precios y duración</p>
-              </div>
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+                  <p className="text-sm">Cargando planes...</p>
+                </div>
+              ) : plans.length > 0 ? (
+                <div className="space-y-3">
+                  {plans.map((plan) => (
+                    <div key={plan.id} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="font-medium text-gray-900">{plan.name}</div>
+                        <div className="text-lg font-semibold text-orange-600">${plan.price}</div>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-1">{plan.description}</div>
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>{plan.classCount} clases</span>
+                        <span>{plan.durationDays} días</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">No hay planes configurados</p>
+                  <p className="text-xs text-gray-400 mt-1">Crea planes de membresía con precios y duración</p>
+                </div>
+              )}
             </div>
           </div>
         )

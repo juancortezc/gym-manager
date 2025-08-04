@@ -6,6 +6,70 @@ import { Save, Key, Database, Smartphone, Info } from 'lucide-react'
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'general' | 'security' | 'about'>('general')
+  const [currentPin, setCurrentPin] = useState('')
+  const [newPin, setNewPin] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
+
+  const handlePinChange = async () => {
+    if (!currentPin || !newPin || !confirmPin) {
+      setMessage('Todos los campos son obligatorios')
+      setMessageType('error')
+      return
+    }
+
+    if (newPin !== confirmPin) {
+      setMessage('El nuevo PIN y la confirmación no coinciden')
+      setMessageType('error')
+      return
+    }
+
+    if (!/^\d{4}$/.test(newPin)) {
+      setMessage('El PIN debe tener exactamente 4 dígitos')
+      setMessageType('error')
+      return
+    }
+
+    setLoading(true)
+    setMessage('')
+
+    try {
+      // First get current user ID from auth
+      const authResponse = await fetch('/api/auth/current')
+      if (!authResponse.ok) {
+        throw new Error('No se pudo obtener el usuario actual')
+      }
+      const authData = await authResponse.json()
+      
+      const response = await fetch(`/api/users/${authData.userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPin,
+          newPin
+        })
+      })
+
+      if (response.ok) {
+        setMessage('✅ PIN actualizado exitosamente')
+        setMessageType('success')
+        setCurrentPin('')
+        setNewPin('')
+        setConfirmPin('')
+      } else {
+        const error = await response.json()
+        setMessage(`❌ ${error.error}`)
+        setMessageType('error')
+      }
+    } catch (error) {
+      setMessage('❌ Error al actualizar PIN')
+      setMessageType('error')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <Layout title="Configuración">
@@ -103,6 +167,8 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="password"
+                    value={currentPin}
+                    onChange={(e) => setCurrentPin(e.target.value)}
                     className="w-full max-w-xs p-2 border border-gray-300 rounded-md"
                     placeholder="••••"
                     maxLength={4}
@@ -114,6 +180,8 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="password"
+                    value={newPin}
+                    onChange={(e) => setNewPin(e.target.value)}
                     className="w-full max-w-xs p-2 border border-gray-300 rounded-md"
                     placeholder="••••"
                     maxLength={4}
@@ -125,14 +193,27 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="password"
+                    value={confirmPin}
+                    onChange={(e) => setConfirmPin(e.target.value)}
                     className="w-full max-w-xs p-2 border border-gray-300 rounded-md"
                     placeholder="••••"
                     maxLength={4}
                   />
                 </div>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2">
+                {message && (
+                  <div className={`p-3 rounded-md text-sm ${
+                    messageType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}>
+                    {message}
+                  </div>
+                )}
+                <button 
+                  onClick={handlePinChange}
+                  disabled={loading}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                >
                   <Save className="w-4 h-4" />
-                  Actualizar PIN
+                  {loading ? 'Actualizando...' : 'Actualizar PIN'}
                 </button>
               </div>
             </div>
