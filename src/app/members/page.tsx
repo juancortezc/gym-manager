@@ -77,6 +77,9 @@ export default function MembersPage() {
     gender: 'M',
     phone: '',
     email: '',
+    planId: '',
+    startDate: new Date().toISOString().split('T')[0],
+    paymentMethod: 'Efectivo',
   })
 
   const [membershipForm, setMembershipForm] = useState({
@@ -117,18 +120,77 @@ export default function MembersPage() {
   const handleMemberSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const url = selectedMember ? `/api/members/${selectedMember.id}` : '/api/members'
-      const method = selectedMember ? 'PUT' : 'POST'
+      // If editing member, only update member info (no membership creation)
+      if (selectedMember) {
+        const response = await fetch(`/api/members/${selectedMember.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName: memberForm.firstName,
+            lastName: memberForm.lastName,
+            gender: memberForm.gender,
+            phone: memberForm.phone,
+            email: memberForm.email,
+          }),
+        })
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(memberForm),
-      })
+        if (response.ok) {
+          await fetchData()
+          closeModal()
+        }
+      } else {
+        // Creating new member
+        const memberResponse = await fetch('/api/members', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName: memberForm.firstName,
+            lastName: memberForm.lastName,
+            gender: memberForm.gender,
+            phone: memberForm.phone,
+            email: memberForm.email,
+          }),
+        })
 
-      if (response.ok) {
-        await fetchData()
-        closeModal()
+        if (memberResponse.ok) {
+          const newMember = await memberResponse.json()
+          
+          // If a plan was selected, create membership
+          if (memberForm.planId) {
+            const plan = plans.find(p => p.id === memberForm.planId)
+            if (plan) {
+              const startDate = new Date(memberForm.startDate)
+              const endDate = new Date(startDate.getTime() + plan.durationInDays * 24 * 60 * 60 * 1000)
+              
+              await fetch('/api/memberships', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  memberId: newMember.id,
+                  planId: memberForm.planId,
+                  startDate: startDate.toISOString(),
+                  endDate: endDate.toISOString(),
+                  paymentMethod: memberForm.paymentMethod,
+                  totalPaid: plan.price,
+                })
+              })
+            }
+          }
+
+          await fetchData()
+          closeModal()
+          // Reset form
+          setMemberForm({
+            firstName: '',
+            lastName: '',
+            gender: 'M',
+            phone: '',
+            email: '',
+            planId: '',
+            startDate: new Date().toISOString().split('T')[0],
+            paymentMethod: 'Efectivo',
+          })
+        }
       }
     } catch (error) {
       console.error('Error saving member:', error)
@@ -138,15 +200,26 @@ export default function MembersPage() {
   const handleMembershipSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('/api/memberships', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(membershipForm),
-      })
+      const plan = plans.find(p => p.id === membershipForm.planId)
+      if (plan) {
+        const startDate = new Date(membershipForm.startDate)
+        const endDate = new Date(startDate.getTime() + plan.durationInDays * 24 * 60 * 60 * 1000)
+        
+        const response = await fetch('/api/memberships', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...membershipForm,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            totalPaid: parseFloat(membershipForm.totalPaid),
+          }),
+        })
 
-      if (response.ok) {
-        await fetchData()
-        closeModal()
+        if (response.ok) {
+          await fetchData()
+          closeModal()
+        }
       }
     } catch (error) {
       console.error('Error creating membership:', error)
@@ -172,6 +245,9 @@ export default function MembersPage() {
         gender: 'M',
         phone: '',
         email: '',
+        planId: '',
+        startDate: new Date().toISOString().split('T')[0],
+        paymentMethod: 'Efectivo',
       })
     }
     
@@ -187,6 +263,9 @@ export default function MembersPage() {
       gender: 'M',
       phone: '',
       email: '',
+      planId: '',
+      startDate: new Date().toISOString().split('T')[0],
+      paymentMethod: 'Efectivo',
     })
     setMembershipForm({
       memberId: '',
@@ -384,12 +463,61 @@ export default function MembersPage() {
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h4 className="text-sm font-semibold mb-3 text-gray-700">Membresía (opcional)</h4>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Plan</label>
+                  <select
+                    value={memberForm.planId}
+                    onChange={(e) => setMemberForm({ ...memberForm, planId: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Sin plan (solo crear miembro)</option>
+                    {plans.map((plan) => (
+                      <option key={plan.id} value={plan.id}>
+                        {plan.name} - {formatCurrency(plan.price)} ({plan.totalClasses} clases, {plan.durationInDays} días)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {memberForm.planId && (
+                  <>
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio</label>
+                      <input
+                        type="date"
+                        value={memberForm.startDate}
+                        onChange={(e) => setMemberForm({ ...memberForm, startDate: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Forma de Pago</label>
+                      <select
+                        value={memberForm.paymentMethod}
+                        onChange={(e) => setMemberForm({ ...memberForm, paymentMethod: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      >
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                        <option value="Transferencia">Transferencia</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+              </div>
               
               <button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
               >
-                Registrar Miembro
+                {memberForm.planId ? 'Registrar Miembro con Membresía' : 'Registrar Miembro'}
               </button>
             </form>
           </div>
@@ -510,6 +638,31 @@ export default function MembersPage() {
                 </select>
               </div>
               
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio</label>
+                <input
+                  type="date"
+                  value={membershipForm.startDate}
+                  onChange={(e) => setMembershipForm({ ...membershipForm, startDate: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Forma de Pago</label>
+                <select
+                  value={membershipForm.paymentMethod}
+                  onChange={(e) => setMembershipForm({ ...membershipForm, paymentMethod: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                  <option value="Transferencia">Transferencia</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Monto Pagado</label>
                 <input

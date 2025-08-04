@@ -20,7 +20,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, hourlyRate } = await request.json()
+    const { name, hourlyRate, birthDate } = await request.json()
 
     if (!name || !hourlyRate || hourlyRate <= 0) {
       return NextResponse.json(
@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: name.trim(),
         hourlyRate: parseFloat(hourlyRate),
+        birthDate: birthDate ? new Date(birthDate) : null,
       },
     })
 

@@ -6,7 +6,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { name, hourlyRate, active } = await request.json()
+    const { name, hourlyRate, birthDate, active } = await request.json()
     const { id } = await params
 
     if (!name || !hourlyRate || hourlyRate <= 0) {
@@ -21,6 +21,7 @@ export async function PUT(
       data: {
         name: name.trim(),
         hourlyRate: parseFloat(hourlyRate),
+        birthDate: birthDate ? new Date(birthDate) : null,
         active: active ?? true,
       },
     })

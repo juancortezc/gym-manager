@@ -8,13 +8,20 @@ import {
   Users,
   Brush,
   CreditCard,
-  Plus
+  Plus,
+  Edit,
+  Trash2
 } from 'lucide-react'
+import TrainerForm from '@/components/forms/TrainerForm'
+import CleaningStaffForm from '@/components/forms/CleaningStaffForm'
+import PlanForm from '@/components/forms/PlanForm'
 
 export default function ConfigPage() {
   const [activeTab, setActiveTab] = useState('trainers')
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState<'trainer' | 'cleaning' | 'plan'>('trainer')
+  const [editingItem, setEditingItem] = useState<any>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{show: boolean, item: any, type: string}>({show: false, item: null, type: ''})
   
   // Data states
   const [trainers, setTrainers] = useState<any[]>([])
@@ -57,15 +64,39 @@ export default function ConfigPage() {
     { id: 'plans', label: 'Planes' }
   ]
 
-  const openModal = (type: 'trainer' | 'cleaning' | 'plan') => {
+  const openModal = (type: 'trainer' | 'cleaning' | 'plan', item?: any) => {
     setModalType(type)
+    setEditingItem(item || null)
     setShowModal(true)
   }
 
   const closeModal = () => {
     setShowModal(false)
+    setEditingItem(null)
     // Refresh data after closing modal
     fetchData()
+  }
+
+  const handleDelete = async (item: any, type: string) => {
+    try {
+      const endpoint = type === 'trainer' ? 'trainers' : type === 'cleaning' ? 'cleaning-staff' : 'plans'
+      const response = await fetch(`/api/${endpoint}/${item.id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setShowDeleteConfirm({show: false, item: null, type: ''})
+        fetchData()
+      } else {
+        alert('Error al eliminar el registro')
+      }
+    } catch (error) {
+      alert('Error al eliminar el registro')
+    }
+  }
+
+  const confirmDelete = (item: any, type: string) => {
+    setShowDeleteConfirm({show: true, item, type})
   }
 
   const renderTabContent = () => {
@@ -94,13 +125,28 @@ export default function ConfigPage() {
                 <div className="space-y-3">
                   {trainers.map((trainer) => (
                     <div key={trainer.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div>
+                      <div className="flex-1">
                         <div className="font-medium text-gray-900">{trainer.name}</div>
-                        <div className="text-sm text-gray-500">{trainer.phone || 'Sin teléfono'}</div>
+                        <div className="text-sm text-gray-500">
+                          ${trainer.hourlyRate}/h
+                          {trainer.birthDate && ` • Cumpleaños: ${new Date(trainer.birthDate).toLocaleDateString('es-ES')}`}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-lg font-semibold text-blue-600">${trainer.hourlyRate}/h</div>
-                        <div className="text-xs text-gray-500">Activo</div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => openModal('trainer', trainer)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
+                          title="Editar"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => confirmDelete(trainer, 'trainer')}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                          title="Eliminar"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -140,13 +186,28 @@ export default function ConfigPage() {
                 <div className="space-y-3">
                   {cleaningStaff.map((staff) => (
                     <div key={staff.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div>
+                      <div className="flex-1">
                         <div className="font-medium text-gray-900">{staff.name}</div>
-                        <div className="text-sm text-gray-500">{staff.phone || 'Sin teléfono'}</div>
+                        <div className="text-sm text-gray-500">
+                          ${staff.hourlyRate}/h
+                          {staff.birthDate && ` • Cumpleaños: ${new Date(staff.birthDate).toLocaleDateString('es-ES')}`}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-lg font-semibold text-green-600">${staff.hourlyRate}/h</div>
-                        <div className="text-xs text-gray-500">Activo</div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => openModal('cleaning', staff)}
+                          className="p-2 text-green-600 hover:bg-green-100 rounded-md transition-colors"
+                          title="Editar"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => confirmDelete(staff, 'cleaning')}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                          title="Eliminar"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -187,13 +248,30 @@ export default function ConfigPage() {
                   {plans.map((plan) => (
                     <div key={plan.id} className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-start mb-2">
-                        <div className="font-medium text-gray-900">{plan.name}</div>
-                        <div className="text-lg font-semibold text-orange-600">${plan.price}</div>
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">{plan.name}</div>
+                          <div className="text-lg font-semibold text-orange-600">${plan.price}</div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => openModal('plan', plan)}
+                            className="p-2 text-orange-600 hover:bg-orange-100 rounded-md transition-colors"
+                            title="Editar"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(plan, 'plan')}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600 mb-1">{plan.description}</div>
                       <div className="flex justify-between text-xs text-gray-500">
-                        <span>{plan.classCount} clases</span>
-                        <span>{plan.durationDays} días</span>
+                        <span>{plan.totalClasses} clases totales</span>
+                        <span>{plan.durationInDays} días • {plan.classesPerWeek}/semana</span>
                       </div>
                     </div>
                   ))}
@@ -231,21 +309,70 @@ export default function ConfigPage() {
         isOpen={showModal}
         onClose={closeModal}
         title={
-          modalType === 'trainer' ? 'Nuevo Entrenador' :
-          modalType === 'cleaning' ? 'Nuevo Personal de Limpieza' :
-          'Nuevo Plan'
+          editingItem ? 
+            (modalType === 'trainer' ? 'Editar Entrenador' :
+             modalType === 'cleaning' ? 'Editar Personal de Limpieza' :
+             'Editar Plan') :
+            (modalType === 'trainer' ? 'Nuevo Entrenador' :
+             modalType === 'cleaning' ? 'Nuevo Personal de Limpieza' :
+             'Nuevo Plan')
         }
       >
+        {modalType === 'trainer' && (
+          <TrainerForm 
+            onSuccess={closeModal} 
+            trainer={editingItem}
+            isEdit={!!editingItem}
+          />
+        )}
+        {modalType === 'cleaning' && (
+          <CleaningStaffForm 
+            onSuccess={closeModal} 
+            staff={editingItem}
+            isEdit={!!editingItem}
+          />
+        )}
+        {modalType === 'plan' && (
+          <PlanForm 
+            onSuccess={closeModal} 
+            plan={editingItem}
+            isEdit={!!editingItem}
+          />
+        )}
+      </MobileModal>
+
+      {/* Delete Confirmation Modal */}
+      <MobileModal
+        isOpen={showDeleteConfirm.show}
+        onClose={() => setShowDeleteConfirm({show: false, item: null, type: ''})}
+        title="Confirmar Eliminación"
+      >
         <div className="p-4">
-          <div className="text-center py-8 text-gray-500">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              {modalType === 'trainer' && <Users size={32} className="text-gray-400" />}
-              {modalType === 'cleaning' && <Brush size={32} className="text-gray-400" />}
-              {modalType === 'plan' && <CreditCard size={32} className="text-gray-400" />}
+          <div className="text-center py-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 size={32} className="text-red-600" />
             </div>
-            <p className="text-sm">
-              Formulario de {modalType === 'trainer' ? 'entrenador' : modalType === 'cleaning' ? 'personal de limpieza' : 'plan'} próximamente
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              ¿Estás seguro?
+            </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Esta acción marcará el registro como inactivo. No se eliminará permanentemente 
+              para mantener el historial de operaciones.
             </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowDeleteConfirm({show: false, item: null, type: ''})}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDelete(showDeleteConfirm.item, showDeleteConfirm.type)}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
         </div>
       </MobileModal>
