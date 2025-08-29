@@ -159,7 +159,16 @@ export default function Layout({ children, title, onQuickAction }: LayoutProps) 
             >
               <Menu size={18} />
             </button>
-            <h2 className="text-lg font-semibold text-[var(--luxury-charcoal)]">{title}</h2>
+            <div className="flex items-center space-x-3">
+              <Link 
+                href="/dashboard"
+                className="text-lg font-bold text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                Figures & Fitness
+              </Link>
+              <span className="hidden sm:block text-gray-300">|</span>
+              <h2 className="hidden sm:block text-lg font-semibold text-[var(--luxury-charcoal)]">{title}</h2>
+            </div>
           </div>
           <div className="flex items-center space-x-3">
             <div className="hidden sm:block text-xs text-gray-500 font-medium">

@@ -1,0 +1,14 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="24" fill="#2563eb"/>
+  <g transform="translate(48, 48)">
+    <!-- Gym weight/dumbbell icon -->
+    <rect x="12" y="40" width="72" height="16" rx="8" fill="white"/>
+    <rect x="0" y="36" width="16" height="24" rx="8" fill="white"/>
+    <rect x="80" y="36" width="16" height="24" rx="8" fill="white"/>
+    <rect x="4" y="32" width="8" height="32" rx="4" fill="white"/>
+    <rect x="84" y="32" width="8" height="32" rx="4" fill="white"/>
+    
+    <!-- GM text -->
+    <text x="48" y="84" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white">GM</text>
+  </g>
+</svg>

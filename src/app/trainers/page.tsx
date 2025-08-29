@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Layout from '@/components/Layout'
-import { Plus, Edit, Trash2, Clock, DollarSign, Calendar } from 'lucide-react'
+import { Plus, Edit, Trash2, Clock, DollarSign, Calendar, ChevronDown, ChevronUp, BarChart3, Users } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 interface Trainer {
@@ -22,6 +22,45 @@ interface TrainerSession {
   totalHours: number | null
   notes: string | null
   trainer: Trainer
+}
+
+interface TrainerReportData {
+  id: string
+  name: string
+  hourlyRate: number
+  totalHours: number
+  totalPayment: number
+  sessionCount: number
+  daysWorked: number
+  dailySummary: DailySummary[]
+}
+
+interface DailySummary {
+  date: string
+  sessions: SessionDetail[]
+  dayTotalHours: number
+}
+
+interface SessionDetail {
+  id: string
+  startTime: string
+  endTime: string
+  totalHours: number
+  notes: string | null
+}
+
+interface ReportSummary {
+  totalTrainers: number
+  totalHours: number
+  totalPayments: number
+  totalSessions: number
+}
+
+interface TrainerReportResponse {
+  month: number
+  year: number
+  summary: ReportSummary
+  trainers: TrainerReportData[]
 }
 
 export default function TrainersPage() {
@@ -47,6 +86,14 @@ export default function TrainersPage() {
   })
 
   useEffect(() => {
+    // Check URL params for initial tab
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const tabParam = urlParams.get('tab')
+      if (tabParam === 'reports') {
+        setActiveTab('reports')
+      }
+    }
     fetchData()
   }, [])
 
@@ -337,14 +384,7 @@ export default function TrainersPage() {
         )}
 
         {/* Reports Tab */}
-        {activeTab === 'reports' && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Reportes de Pagos</h2>
-            <div className="bg-white rounded-lg shadow p-6">
-              <p className="text-gray-500">Reportes mensuales próximamente...</p>
-            </div>
-          </div>
-        )}
+        {activeTab === 'reports' && <TrainerReports />}
       </div>
 
       {/* Trainer Form Modal */}
@@ -503,5 +543,242 @@ export default function TrainersPage() {
         </div>
       )}
     </Layout>
+  )
+}
+
+// Trainer Reports Component
+function TrainerReports() {
+  const [reportData, setReportData] = useState<TrainerReportResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [expandedTrainer, setExpandedTrainer] = useState<string | null>(null)
+
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ]
+
+  const currentYear = new Date().getFullYear()
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
+
+  useEffect(() => {
+    fetchReportData()
+  }, [selectedMonth, selectedYear])  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchReportData = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/reports/trainers?month=${selectedMonth}&year=${selectedYear}`)
+      if (response.ok) {
+        const data = await response.json()
+        setReportData(data)
+      } else {
+        console.error('Error fetching report data')
+        setReportData(null)
+      }
+    } catch (error) {
+      console.error('Error fetching report data:', error)
+      setReportData(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleTrainerDetail = (trainerId: string) => {
+    setExpandedTrainer(expandedTrainer === trainerId ? null : trainerId)
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-4 mb-6">
+          <BarChart3 className="text-blue-600" size={24} />
+          <h2 className="text-xl font-semibold">Reportes de Entrenadores</h2>
+        </div>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-500">Cargando reporte...</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Month/Year Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center space-x-4">
+          <BarChart3 className="text-blue-600" size={24} />
+          <h2 className="text-xl font-semibold">Reportes de Entrenadores</h2>
+        </div>
+        
+        <div className="flex items-center space-x-3">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {months.map((month, index) => (
+              <option key={index} value={index + 1}>
+                {month}
+              </option>
+            ))}
+          </select>
+          
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {years.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      {reportData?.summary && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Entrenadores</p>
+                <p className="text-2xl font-bold text-blue-600">{reportData.summary.totalTrainers}</p>
+              </div>
+              <Users className="text-blue-600" size={24} />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Horas</p>
+                <p className="text-2xl font-bold text-green-600">{reportData.summary.totalHours}h</p>
+              </div>
+              <Clock className="text-green-600" size={24} />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total a Pagar</p>
+                <p className="text-2xl font-bold text-orange-600">{formatCurrency(reportData.summary.totalPayments)}</p>
+              </div>
+              <DollarSign className="text-orange-600" size={24} />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Sesiones</p>
+                <p className="text-2xl font-bold text-purple-600">{reportData.summary.totalSessions}</p>
+              </div>
+              <Calendar className="text-purple-600" size={24} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trainer Cards */}
+      {reportData?.trainers && reportData.trainers.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {reportData.trainers.map((trainer) => (
+            <div key={trainer.id} className="bg-white rounded-lg shadow overflow-hidden">
+              {/* Trainer Header */}
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">{trainer.name}</h3>
+                  <span className="text-sm text-gray-600 bg-white px-2 py-1 rounded-full">
+                    {formatCurrency(trainer.hourlyRate)}/h
+                  </span>
+                </div>
+              </div>
+
+              {/* Trainer Stats */}
+              <div className="p-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">{trainer.totalHours}h</p>
+                    <p className="text-sm text-gray-600">Horas Trabajadas</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(trainer.totalPayment)}</p>
+                    <p className="text-sm text-gray-600">A Pagar</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between text-sm text-gray-600 mb-4">
+                  <span>{trainer.sessionCount} sesiones</span>
+                  <span>{trainer.daysWorked} días trabajados</span>
+                </div>
+
+                {/* Toggle Detail Button */}
+                <button
+                  onClick={() => toggleTrainerDetail(trainer.id)}
+                  className="w-full flex items-center justify-center py-2 px-4 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <span className="text-sm font-medium text-gray-700 mr-2">
+                    {expandedTrainer === trainer.id ? 'Ocultar Detalle' : 'Ver Detalle'}
+                  </span>
+                  {expandedTrainer === trainer.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+
+                {/* Expanded Detail */}
+                {expandedTrainer === trainer.id && (
+                  <div className="mt-4 border-t pt-4">
+                    <h4 className="font-medium text-gray-900 mb-3">Resumen Diario</h4>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {trainer.dailySummary.map((day) => (
+                        <div key={day.date} className="bg-gray-50 p-3 rounded-md">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-gray-900">
+                              {formatDate(day.date)}
+                            </span>
+                            <span className="text-sm font-semibold text-green-600">
+                              {day.dayTotalHours}h
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            {day.sessions.map((session) => (
+                              <div key={session.id} className="text-xs text-gray-600 flex justify-between">
+                                <span>
+                                  {new Date(session.startTime).toLocaleTimeString('es-CO', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  })} - {new Date(session.endTime).toLocaleTimeString('es-CO', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  })}
+                                </span>
+                                <span>{session.totalHours}h</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <div className="text-gray-400 mb-4">
+            <BarChart3 size={48} className="mx-auto" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay datos para mostrar</h3>
+          <p className="text-gray-600">
+            No se encontraron sesiones de entrenamiento para {months[selectedMonth - 1]} {selectedYear}
+          </p>
+        </div>
+      )}
+    </div>
   )
 }

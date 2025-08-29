@@ -13,7 +13,10 @@ import {
   FileText,
   Users,
   BarChart3,
-  Settings
+  Settings,
+  TrendingUp,
+  Sparkles,
+  DollarSign
 } from 'lucide-react'
 import TrainerSessionForm from '@/components/forms/TrainerSessionForm'
 import CashTransactionForm from '@/components/forms/CashTransactionForm'
@@ -155,11 +158,25 @@ export default function DashboardPage() {
       onClick: () => window.location.href = '/members'
     },
     {
-      id: 'reports',
-      label: 'Reportes',
-      icon: BarChart3,
+      id: 'rpt-ent',
+      label: 'RPT ENT',
+      icon: TrendingUp,
+      color: 'purple' as const,
+      onClick: () => window.location.href = '/trainers?tab=reports'
+    },
+    {
+      id: 'rpt-limp',
+      label: 'RPT LIMP',
+      icon: Sparkles,
       color: 'orange' as const,
-      onClick: () => alert('Próximamente')
+      onClick: () => window.location.href = '/cleaning?tab=reports'
+    },
+    {
+      id: 'rpt-caja',
+      label: 'RPT CAJA',
+      icon: DollarSign,
+      color: 'yellow' as const,
+      onClick: () => window.location.href = '/cash?tab=reports'
     },
     {
       id: 'settings',

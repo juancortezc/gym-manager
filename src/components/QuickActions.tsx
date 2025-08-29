@@ -4,7 +4,7 @@ interface QuickAction {
   id: string
   label: string
   icon: LucideIcon
-  color: 'blue' | 'green' | 'orange' | 'gray'
+  color: 'blue' | 'green' | 'orange' | 'gray' | 'purple' | 'yellow'
   onClick: () => void
 }
 
@@ -19,6 +19,8 @@ export default function QuickActions({ actions, className = '' }: QuickActionsPr
     green: 'bg-green-100 text-green-600',
     orange: 'bg-orange-100 text-orange-600',
     gray: 'bg-gray-100 text-gray-600',
+    purple: 'bg-purple-100 text-purple-600',
+    yellow: 'bg-yellow-100 text-yellow-600',
   }
 
   return (
