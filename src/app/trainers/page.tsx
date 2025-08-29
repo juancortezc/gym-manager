@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Layout from '@/components/Layout'
-import { Plus, Edit, Trash2, Clock, DollarSign, Calendar, ChevronDown, ChevronUp, BarChart3, Users } from 'lucide-react'
+import { Plus, Edit, Trash2, Clock, DollarSign, Calendar, ChevronDown, ChevronUp, BarChart3, Users, Download } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 interface Trainer {
@@ -553,6 +553,7 @@ function TrainerReports() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [expandedTrainer, setExpandedTrainer] = useState<string | null>(null)
+  const [generatingPDF, setGeneratingPDF] = useState(false)
 
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -587,6 +588,162 @@ function TrainerReports() {
 
   const toggleTrainerDetail = (trainerId: string) => {
     setExpandedTrainer(expandedTrainer === trainerId ? null : trainerId)
+  }
+
+  const generatePDF = async () => {
+    if (!reportData) return
+
+    setGeneratingPDF(true)
+    try {
+      const jsPDF = (await import('jspdf')).default
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      
+      // Header
+      pdf.setFontSize(20)
+      pdf.setTextColor(37, 99, 235) // Blue color
+      pdf.text('Figures & Fitness', 20, 20)
+      
+      pdf.setFontSize(16)
+      pdf.setTextColor(0, 0, 0)
+      pdf.text(`Reporte de Entrenadores - ${months[selectedMonth - 1]} ${selectedYear}`, 20, 35)
+      
+      // Summary section
+      pdf.setFontSize(14)
+      pdf.text('Resumen General', 20, 55)
+      
+      let yPosition = 65
+      pdf.setFontSize(10)
+      pdf.text(`Total de Entrenadores: ${reportData.summary.totalTrainers}`, 20, yPosition)
+      yPosition += 7
+      pdf.text(`Total de Horas: ${reportData.summary.totalHours}h`, 20, yPosition)
+      yPosition += 7
+      pdf.text(`Total a Pagar: ${formatCurrency(reportData.summary.totalPayments)}`, 20, yPosition)
+      yPosition += 7
+      pdf.text(`Total de Sesiones: ${reportData.summary.totalSessions}`, 20, yPosition)
+      
+      // Table header
+      yPosition += 15
+      pdf.setFontSize(14)
+      pdf.text('Detalle por Entrenador', 20, yPosition)
+      
+      yPosition += 10
+      pdf.setFontSize(10)
+      pdf.setFont(undefined, 'bold')
+      
+      // Table headers
+      const tableHeaders = ['Nombre', 'Tarifa/h', 'Horas', 'Total a Pagar', 'Días']
+      const columnWidths = [40, 25, 25, 35, 25]
+      let xPosition = 20
+      
+      tableHeaders.forEach((header, index) => {
+        pdf.text(header, xPosition, yPosition)
+        xPosition += columnWidths[index]
+      })
+      
+      yPosition += 5
+      pdf.line(20, yPosition, 170, yPosition) // Line under headers
+      yPosition += 5
+      
+      // Table data with detailed breakdown
+      pdf.setFont(undefined, 'normal')
+      reportData.trainers.forEach((trainer) => {
+        if (yPosition > 260) {
+          pdf.addPage()
+          yPosition = 20
+        }
+        
+        // Trainer summary row
+        xPosition = 20
+        pdf.setFont(undefined, 'bold')
+        pdf.text(trainer.name, xPosition, yPosition)
+        xPosition += columnWidths[0]
+        
+        pdf.text(formatCurrency(trainer.hourlyRate), xPosition, yPosition)
+        xPosition += columnWidths[1]
+        
+        pdf.text(`${trainer.totalHours}h`, xPosition, yPosition)
+        xPosition += columnWidths[2]
+        
+        pdf.text(formatCurrency(trainer.totalPayment), xPosition, yPosition)
+        xPosition += columnWidths[3]
+        
+        pdf.text(trainer.daysWorked.toString(), xPosition, yPosition)
+        
+        yPosition += 8
+        
+        // Daily detail breakdown
+        if (trainer.dailySummary && trainer.dailySummary.length > 0) {
+          pdf.setFont(undefined, 'normal')
+          pdf.setFontSize(8)
+          
+          trainer.dailySummary.forEach((day) => {
+            if (yPosition > 270) {
+              pdf.addPage()
+              yPosition = 20
+            }
+            
+            // Date header
+            pdf.setTextColor(100, 100, 100)
+            pdf.text(`  ${formatDate(day.date)} - ${day.dayTotalHours}h total`, 25, yPosition)
+            yPosition += 4
+            
+            // Sessions for this day
+            day.sessions.forEach((session) => {
+              if (yPosition > 275) {
+                pdf.addPage()
+                yPosition = 20
+              }
+              
+              const startTime = new Date(session.startTime).toLocaleTimeString('es-CO', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })
+              const endTime = new Date(session.endTime).toLocaleTimeString('es-CO', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })
+              
+              pdf.text(`    ${startTime} - ${endTime} (${session.totalHours}h)`, 30, yPosition)
+              if (session.notes) {
+                pdf.setTextColor(150, 150, 150)
+                const noteText = session.notes.length > 40 ? session.notes.substring(0, 40) + '...' : session.notes
+                pdf.text(`- ${noteText}`, 100, yPosition)
+              }
+              yPosition += 3
+            })
+            
+            yPosition += 2
+          })
+          
+          // Reset formatting
+          pdf.setFontSize(10)
+          pdf.setTextColor(0, 0, 0)
+          yPosition += 3
+        }
+        
+        yPosition += 2
+      })
+      
+      // Footer
+      const pageCount = pdf.getNumberOfPages()
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i)
+        pdf.setFontSize(8)
+        pdf.setTextColor(128, 128, 128)
+        pdf.text(`Generado el ${new Date().toLocaleDateString('es-CO')} - Página ${i} de ${pageCount}`, 20, 285)
+        pdf.text('Elaborado por Paula Cortez', 20, 290)
+      }
+      
+      // Download
+      const fileName = `reporte-entrenadores-${months[selectedMonth - 1].toLowerCase()}-${selectedYear}.pdf`
+      pdf.save(fileName)
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      alert('Error al generar el PDF. Por favor intenta nuevamente.')
+    } finally {
+      setGeneratingPDF(false)
+    }
   }
 
   if (loading) {
@@ -636,6 +793,15 @@ function TrainerReports() {
               </option>
             ))}
           </select>
+          
+          <button
+            onClick={generatePDF}
+            disabled={generatingPDF || !reportData?.trainers?.length}
+            className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          >
+            <Download size={16} />
+            <span>{generatingPDF ? 'Generando...' : 'PDF'}</span>
+          </button>
         </div>
       </div>
 

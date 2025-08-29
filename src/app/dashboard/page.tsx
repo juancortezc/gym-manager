@@ -10,9 +10,6 @@ import {
   Clock,
   CreditCard,
   Brush,
-  FileText,
-  Users,
-  BarChart3,
   Settings,
   TrendingUp,
   Sparkles,
@@ -144,20 +141,6 @@ export default function DashboardPage() {
 
   const quickActionsData = [
     {
-      id: 'register',
-      label: 'Registrar',
-      icon: FileText,
-      color: 'blue' as const,
-      onClick: () => setActiveModal('visit')
-    },
-    {
-      id: 'members',
-      label: 'Miembros',
-      icon: Users,
-      color: 'green' as const,
-      onClick: () => window.location.href = '/members'
-    },
-    {
       id: 'rpt-ent',
       label: 'RPT ENT',
       icon: TrendingUp,
@@ -165,18 +148,18 @@ export default function DashboardPage() {
       onClick: () => window.location.href = '/trainers?tab=reports'
     },
     {
-      id: 'rpt-limp',
-      label: 'RPT LIMP',
-      icon: Sparkles,
-      color: 'orange' as const,
-      onClick: () => window.location.href = '/cleaning?tab=reports'
-    },
-    {
       id: 'rpt-caja',
       label: 'RPT CAJA',
       icon: DollarSign,
       color: 'yellow' as const,
       onClick: () => window.location.href = '/cash?tab=reports'
+    },
+    {
+      id: 'rpt-limp',
+      label: 'RPT LIMP',
+      icon: Sparkles,
+      color: 'orange' as const,
+      onClick: () => window.location.href = '/cleaning?tab=reports'
     },
     {
       id: 'settings',
