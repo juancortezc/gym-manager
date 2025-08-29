@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+// import { useSession, signOut as nextAuthSignOut } from 'next-auth/react' // Disabled until OAuth is configured
 import { 
   LayoutDashboard,
   Users, 
@@ -28,14 +29,18 @@ interface LayoutProps {
 export default function Layout({ children, title, onQuickAction }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  // const { data: session, status } = useSession() // Disabled until OAuth is configured
+  const session = null // Temporary placeholder
   const router = useRouter()
 
   const handleLogout = async () => {
     try {
+      // For now, always use PIN logout until Google OAuth is configured
       await fetch('/api/auth/logout', { method: 'POST' })
       router.push('/login')
     } catch (error) {
       console.error('Logout error:', error)
+      router.push('/login')
     }
   }
 
@@ -171,6 +176,20 @@ export default function Layout({ children, title, onQuickAction }: LayoutProps) 
             </div>
           </div>
           <div className="flex items-center space-x-3">
+            {session?.user && (
+              <div className="hidden sm:flex items-center space-x-3">
+                {session.user.image && (
+                  <img 
+                    src={session.user.image} 
+                    alt={session.user.name || 'Usuario'} 
+                    className="w-6 h-6 rounded-full"
+                  />
+                )}
+                <span className="text-xs text-gray-600 font-medium">
+                  {session.user.name || session.user.email}
+                </span>
+              </div>
+            )}
             <div className="hidden sm:block text-xs text-gray-500 font-medium">
               {new Date().toLocaleDateString('es-ES', { 
                 weekday: 'short', 
@@ -178,6 +197,14 @@ export default function Layout({ children, title, onQuickAction }: LayoutProps) 
                 day: 'numeric' 
               })}
             </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              title="Cerrar Sesión"
+            >
+              <LogOut size={16} />
+              <span className="hidden sm:inline">Salir</span>
+            </button>
           </div>
         </header>
 

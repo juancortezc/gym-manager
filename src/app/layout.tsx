@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+// import AuthSessionProvider from "@/components/SessionProvider"; // Disabled until OAuth is configured
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,6 +65,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* AuthSessionProvider temporarily disabled until Google OAuth is configured */}
         {children}
         <script
           dangerouslySetInnerHTML={{

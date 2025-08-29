@@ -13,7 +13,8 @@ import {
   Settings,
   TrendingUp,
   Sparkles,
-  DollarSign
+  DollarSign,
+  Cog
 } from 'lucide-react'
 import TrainerSessionForm from '@/components/forms/TrainerSessionForm'
 import CashTransactionForm from '@/components/forms/CashTransactionForm'
@@ -108,6 +109,10 @@ export default function DashboardPage() {
     setActiveModal(null)
   }
 
+  const handleConfigClick = () => {
+    window.location.href = '/config'
+  }
+
   const mainActions = [
     {
       title: 'Registrar Visita',
@@ -166,6 +171,13 @@ export default function DashboardPage() {
       label: 'Ajustes',
       icon: Settings,
       color: 'gray' as const,
+      onClick: () => window.location.href = '/settings'
+    },
+    {
+      id: 'config',
+      label: 'Config',
+      icon: Cog,
+      color: 'blue' as const,
       onClick: () => window.location.href = '/config'
     }
   ]
@@ -173,6 +185,7 @@ export default function DashboardPage() {
   return (
     <Layout title="Dashboard">
       <div className="space-y-6">
+
         {/* Desktop Grid Layout */}
         <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6">
           {/* Main Actions Column */}
